@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include "stdafx.h"
 
 // CWorkHelperDlg dialog
 class CWorkHelperDlg : public CDialogEx

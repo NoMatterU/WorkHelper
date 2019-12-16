@@ -6,6 +6,7 @@
 #include "WorkHelper.h"
 #include "WorkHelperDlg.h"
 #include "afxdialogex.h"
+#include "ListenKey.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -16,13 +17,16 @@
 //HWND CWorkHelperDlg::m_hWnd = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
 HHOOK CWorkHelperDlg::hHook = NULL;
+
 //bool g_bCapsLock{false}, g_bShift{false};
+/*
 bool iFirst{ true };
 MyMSG msgBuf[MAX_BUF_SIZE]{ 0 };
 int msgIndex{ 0 };
 DWORD startTime{ 0 }, lastTime{ 0 };
-ofstream SaveFile("");
-
+*/
+//ofstream SaveFile("");
+/*
 //add 文字居中显示
 void TextOutStatic(const char *text1, const char *text2 = NULL, const char *text3 = NULL) {
 	char line1[31]{ 0 }, line2[31]{ 0 }, line3[31]{ 0 };
@@ -31,15 +35,15 @@ void TextOutStatic(const char *text1, const char *text2 = NULL, const char *text
 //	memset(line3, 0x20, 30);
 	if (text1 != NULL) {
 		strcpy_s(line1, text1);
-		TextOutA(CWorkHelperDlg::hDC, 30, 20, line1, 30);
+		TextOutA(CWorkHelperDlg::hDC, 60, 25, line1, 30);
 	}
 	if (text2 != NULL) {
 		strcpy_s(line2, text2);
-		TextOutA(CWorkHelperDlg::hDC, 30, 50, line2, 30);
+		TextOutA(CWorkHelperDlg::hDC, 60, 55, line2, 30);
 	}
 	if (text3 != NULL) {
 		strcpy_s(line3, text3);
-		TextOutA(CWorkHelperDlg::hDC, 30, 80, line3, 30);
+		TextOutA(CWorkHelperDlg::hDC, 60, 85, line3, 30);
 	}
 }
 
@@ -66,7 +70,7 @@ bool IsBufFull() {
 
 bool SaveMsg2File() {
 	if (SaveFile.is_open()) 
-		if(msgIndex < MAX_BUF_SIZE)
+		if(msgIndex <= MAX_BUF_SIZE && msgIndex > 0)
 			if(SaveFile.write((char *)msgBuf, sizeof(MyMSG)*msgIndex))
 				return true;
 	return false;
@@ -74,8 +78,10 @@ bool SaveMsg2File() {
 
 void PushMsgBuf(USHORT Interval, UINT message, WPARAM wParam, LPARAM lParam) {
 	MyMSG msg{ Interval, message, wParam, lParam };
-	msgBuf[msgIndex] = msg;
-	msgIndex++;
+	if (msgIndex < MAX_BUF_SIZE) {
+		msgBuf[msgIndex] = msg;
+		msgIndex++;
+	}
 }
 
 void KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {
@@ -104,7 +110,7 @@ void KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {
 		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↓ 键按下");
 	}
 }
-
+*/
 CWorkHelperDlg::CWorkHelperDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_WORKHELPER_DIALOG, pParent)
 {
@@ -150,11 +156,11 @@ BOOL CWorkHelperDlg::OnInitDialog()
 		exit(-1);
 	}
 	
-	SaveFile.open("Journal.txt", ios_base::out);
-	if (!SaveFile.is_open()) {
-		MessageBox(L"文件打开失败!", L"ERROR", MB_OK|MB_ICONERROR);
-		exit(-1);
-	}
+//	SaveFile.open("Journal.txt", ios_base::out);
+//	if (!SaveFile.is_open()) {
+//		MessageBox(L"文件打开失败!", L"ERROR", MB_OK|MB_ICONERROR);
+//		exit(-1);
+//	}
 
 	return FALSE;  // return TRUE  unless you set the focus to a control
 }
@@ -197,7 +203,7 @@ HCURSOR CWorkHelperDlg::OnQueryDragIcon()
 
 void CWorkHelperDlg::EndDialog(int nResult) {
 	::ReleaseDC(m_hWnd, hDC);
-	SaveFile.close();
+//	SaveFile.close();
 }
 
 /****************************************************************
@@ -206,44 +212,41 @@ WH_KEYBOARD hook procedure
 ****************************************************************/
 LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-	char text[30]{ "无法识别按键" };
+	char text[30]{ "无法识别按键" }, interval[30]{ 0 };
+	CListenKey &listen = CListenKey::getInstance();
 
 	if (HC_ACTION == nCode) {
 
 		KBDLLHOOKSTRUCT *  keyNum = (KBDLLHOOKSTRUCT *)lParam;
-		if (iFirst) {
-			startTime = keyNum->time;
-			lastTime = keyNum->time;
-			iFirst = false;
-		}
 		
-		if (!CheckTime(keyNum->time)) {
+		if (!listen.CheckTime(keyNum->time)) {
 			MessageBoxA(theApp.GetMainWnd()->GetSafeHwnd(), "记录超时，此次失效!", "ERROR", MB_OK | MB_ICONERROR);
-			SaveFile.clear();
+//			SaveFile.clear();
 			::SendMessage(theApp.GetMainWnd()->GetSafeHwnd(), WM_ENDHOOK, 0, 0);
 			goto end;
 		}
 
-		if (IsBufFull()) {
-			if (SaveMsg2File()) msgIndex = 0;
-			else goto end;
+		if (listen.IsBufFull()) if (!listen.SaveMsg2File()) {
+			MessageBoxA(theApp.GetMainWnd()->GetSafeHwnd(), "保存文件失败", "ERROR", MB_OK | MB_ICONERROR);
+			::SendMessage(theApp.GetMainWnd()->GetSafeHwnd(), WM_ENDHOOK, 0, 0);
+			goto end;
 		}
 
 		if ((wParam == WM_KEYDOWN)) {		//有键按下
-			KeyStatInfo(keyNum->vkCode, text, false);
-			PushMsgBuf(keyNum->time - lastTime, WM_KEYDOWN, keyNum->vkCode, lParam);
-			TextOutStatic(NULL, text);
+			listen.KeyStatInfo(keyNum->vkCode, text, false);
+			listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, keyNum->vkCode, lParam);
+			sprintf_s(interval, "消息间隔时间 : %d ms", listen.GetIntervalTime(keyNum->time));
+			listen.TextOutStatic(NULL, text, interval);
 		}
 		else if (wParam == WM_KEYUP) {		//有键松开
-			KeyStatInfo(keyNum->vkCode, text, true);
-			PushMsgBuf(keyNum->time - lastTime, WM_KEYUP, keyNum->vkCode, lParam);
-			TextOutStatic(NULL, text);
+			listen.KeyStatInfo(keyNum->vkCode, text, true);
+			listen.PushMsgBuf(keyNum->time, WM_KEYUP, keyNum->vkCode, lParam);
+			listen.TextOutStatic(NULL, text);
 		}
 		else if (wParam == WM_CHAR) {
-			PushMsgBuf(keyNum->time - lastTime, WM_CHAR, keyNum->vkCode, lParam);
+			listen.PushMsgBuf(keyNum->time, WM_CHAR, keyNum->vkCode, lParam);
 		}
 
-		lastTime = keyNum->time;
 	}
 end:
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
@@ -344,13 +347,14 @@ void CWorkHelperDlg::OnBnClickedOk()
 void CWorkHelperDlg::OnBnClickedCancel()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	ExitHook();
+	CListenKey::getInstance().ExitHook();
 	CDialogEx::OnCancel();
 }
 
 
 void CWorkHelperDlg::OnBnClickedStart()
 {
+	CListenKey::getInstance().Init();
 	// TODO: 在此添加控件通知处理程序代码
 	hHook = SetWindowsHookEx(
 		WH_KEYBOARD_LL,    // 监听类型【鼠标】
@@ -366,7 +370,7 @@ void CWorkHelperDlg::OnBnClickedStart()
 		MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
 	}
 	//	TextOutA(hDC, 30, 10, , 20);
-	TextOutStatic("正在监听键盘消息...");
+	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 	this->SetFocus();
 }
 
@@ -374,14 +378,14 @@ void CWorkHelperDlg::OnBnClickedStart()
 void CWorkHelperDlg::OnBnClickedFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if(!SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK|MB_ICONERROR);
-	ExitHook();
+	if(!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK|MB_ICONERROR);
+	CListenKey::getInstance().ExitHook();
 	//	::UnhookWindowsHookEx(hHook);
-	TextOutStatic("当前未在监听状态", " ", " ");
+	CListenKey::getInstance().TextOutStatic("当前未在监听状态", " ", " ");
 	this->SetFocus();
 }
 
 LRESULT CWorkHelperDlg::OnEndHook(WPARAM wParam, LPARAM lParam) {
-	ExitHook();
+	CListenKey::getInstance().ExitHook();
 	return LRESULT(NULL);
 }
