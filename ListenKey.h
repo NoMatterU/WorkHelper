@@ -8,27 +8,33 @@ public:
 		return l;
 	}
 
-	bool Init();
-
 	DWORD GetIntervalTime(DWORD nowTime);
 
 	//add Œƒ◊÷æ”÷–œ‘ æ
 	void TextOutStatic(const char *text1, const char *text2 = NULL, const char *text3 = NULL);
 
-	void ExitHook();
+	bool ExitHook();
 
 	bool CheckTime(DWORD curTime);
+
+	void UpdateTime(DWORD curTime);
 
 	bool IsBufFull();
 
 	bool SaveMsg2File();
 
-	void PushMsgBuf(USHORT nowTime, UINT message, WPARAM wParam, LPARAM lParam);
+	void PushMsgBuf(DWORD nowTime, UINT message, WPARAM wParam, LPARAM lParam);
 
 	void KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp);
 
 private:
-	CListenKey() {};
+	CListenKey() {
+		m_saveFile.open("Journal.txt", ios_base::out);
+	};
+
+	~CListenKey() {
+		m_saveFile.close();
+	}
 
 	bool m_iFirst{ true };
 	MyMSG m_msgBuf[MAX_BUF_SIZE]{ 0 };

@@ -7,9 +7,8 @@ DWORD CListenKey::GetIntervalTime(DWORD nowTime)
 	return nowTime - m_lastTime;
 }
 
-bool CListenKey::Init() {
-	m_saveFile.open("Journal.txt", ios_base::out);
-	return true;
+void CListenKey::UpdateTime(DWORD curTime) {
+	m_lastTime = curTime;
 }
 
 //add Œƒ◊÷æ”÷–œ‘ æ
@@ -32,13 +31,13 @@ void CListenKey::TextOutStatic(const char *text1, const char *text2, const char 
 	}
 }
 
-void CListenKey::ExitHook() {
+bool CListenKey::ExitHook() {
 	memset(m_msgBuf, 0, sizeof(MyMSG) * MAX_BUF_SIZE);
 	m_iFirst = true;
 	m_msgIndex = 0;
 	m_startTime = 0;
 	m_lastTime = 0;
-	UnhookWindowsHookEx(CWorkHelperDlg::hHook);
+	return UnhookWindowsHookEx(CWorkHelperDlg::hHook);
 }
 
 bool CListenKey::CheckTime(DWORD curTime) {
@@ -70,14 +69,13 @@ bool CListenKey::SaveMsg2File() {
 	return false;
 }
 
-void CListenKey::PushMsgBuf(USHORT nowTime, UINT message, WPARAM wParam, LPARAM lParam) {
+void CListenKey::PushMsgBuf(DWORD nowTime, UINT message, WPARAM wParam, LPARAM lParam) {
 	MyMSG msg{ nowTime - m_lastTime, message, wParam, lParam };
 	if (m_msgIndex < MAX_BUF_SIZE) {
 		m_msgBuf[m_msgIndex] = msg;
 		m_msgIndex++;
 	}
-
-	m_lastTime = nowTime;
+//	m_lastTime = nowTime;
 }
 
 void CListenKey::KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {

@@ -234,8 +234,8 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 
 		if ((wParam == WM_KEYDOWN)) {		//有键按下
 			listen.KeyStatInfo(keyNum->vkCode, text, false);
-			listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, keyNum->vkCode, lParam);
 			sprintf_s(interval, "消息间隔时间 : %d ms", listen.GetIntervalTime(keyNum->time));
+			listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, keyNum->vkCode, lParam);
 			listen.TextOutStatic(NULL, text, interval);
 		}
 		else if (wParam == WM_KEYUP) {		//有键松开
@@ -246,7 +246,8 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 		else if (wParam == WM_CHAR) {
 			listen.PushMsgBuf(keyNum->time, WM_CHAR, keyNum->vkCode, lParam);
 		}
-
+		
+		listen.UpdateTime(keyNum->time);
 	}
 end:
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
@@ -354,7 +355,6 @@ void CWorkHelperDlg::OnBnClickedCancel()
 
 void CWorkHelperDlg::OnBnClickedStart()
 {
-	CListenKey::getInstance().Init();
 	// TODO: 在此添加控件通知处理程序代码
 	hHook = SetWindowsHookEx(
 		WH_KEYBOARD_LL,    // 监听类型【鼠标】
@@ -378,8 +378,10 @@ void CWorkHelperDlg::OnBnClickedStart()
 void CWorkHelperDlg::OnBnClickedFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if(!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK|MB_ICONERROR);
-	CListenKey::getInstance().ExitHook();
+	if (!CListenKey::getInstance().ExitHook()) return;
+
+	if (!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK | MB_ICONERROR);
+
 	//	::UnhookWindowsHookEx(hHook);
 	CListenKey::getInstance().TextOutStatic("当前未在监听状态", " ", " ");
 	this->SetFocus();
