@@ -13,7 +13,7 @@ public:
 	//add ндвж╬сжпотй╬
 	void TextOutStatic(const char *text1, const char *text2 = NULL, const char *text3 = NULL);
 
-	bool ExitHook();
+	void ExitHook();
 
 	bool CheckTime(DWORD curTime);
 

@@ -356,38 +356,46 @@ void CWorkHelperDlg::OnBnClickedCancel()
 void CWorkHelperDlg::OnBnClickedStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	hHook = SetWindowsHookEx(
-		WH_KEYBOARD_LL,    // 监听类型【鼠标】
-		KeyBoardProc,  // 处理函数
-		theApp.m_hInstance,      // 当前实例句柄
-		0               // 监听窗口句柄(NULL为全局监听)
-	);
+	CFileDialog FileDlg(true, NULL, L"*", OFN_ALLOWMULTISELECT | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK,
+		TEXT("所有文件(*.*)|*.*|JPEG文件(*.jpg)|*.jpg|PNG文件(*.png)|*.png|BMP文件(*.bmp)|*.bmp||"), this);
 
-	if (hHook == NULL)
-	{
-		WCHAR text[30]{ 0 };
-		wsprintf(text, L"键盘监听失败！错误码 : %d", GetLastError());
-		MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
+	if (IDOK == FileDlg.DoModal()) {
+
+		hHook = SetWindowsHookEx(
+			WH_KEYBOARD_LL,    // 监听类型【鼠标】
+			KeyBoardProc,  // 处理函数
+			theApp.m_hInstance,      // 当前实例句柄
+			0               // 监听窗口句柄(NULL为全局监听)
+		);
+
+		if (hHook == NULL)
+		{
+			WCHAR text[30]{ 0 };
+			wsprintf(text, L"键盘监听失败！错误码 : %d", GetLastError());
+			MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
+		}
+		//	TextOutA(hDC, 30, 10, , 20);
+		CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
+		this->SetFocus();
+
 	}
-	//	TextOutA(hDC, 30, 10, , 20);
-	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
-	this->SetFocus();
 }
 
 
 void CWorkHelperDlg::OnBnClickedFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if (!CListenKey::getInstance().ExitHook()) return;
-
+	if(!::UnhookWindowsHookEx(hHook)) return;
 	if (!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK | MB_ICONERROR);
 
-	//	::UnhookWindowsHookEx(hHook);
+	CListenKey::getInstance().ExitHook();
+
 	CListenKey::getInstance().TextOutStatic("当前未在监听状态", " ", " ");
 	this->SetFocus();
 }
 
 LRESULT CWorkHelperDlg::OnEndHook(WPARAM wParam, LPARAM lParam) {
 	CListenKey::getInstance().ExitHook();
+	::UnhookWindowsHookEx(hHook);
 	return LRESULT(NULL);
 }
