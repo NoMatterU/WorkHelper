@@ -36,6 +36,9 @@
     <ClInclude Include="ListenKey.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="OpnFileDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WorkHelper.cpp">
@@ -48,6 +51,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ListenKey.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OpnFileDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
