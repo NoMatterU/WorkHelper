@@ -7,6 +7,7 @@
 #include "WorkHelperDlg.h"
 #include "afxdialogex.h"
 #include "ListenKey.h"
+#include "OpnFileDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -356,6 +357,7 @@ void CWorkHelperDlg::OnBnClickedCancel()
 void CWorkHelperDlg::OnBnClickedStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
+/*	
 	CFileDialog FileDlg(true, NULL, L"*", OFN_ALLOWMULTISELECT | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK,
 		TEXT("所有文件(*.*)|*.*|JPEG文件(*.jpg)|*.jpg|PNG文件(*.png)|*.png|BMP文件(*.bmp)|*.bmp||"), this);
 
@@ -367,18 +369,30 @@ void CWorkHelperDlg::OnBnClickedStart()
 			theApp.m_hInstance,      // 当前实例句柄
 			0               // 监听窗口句柄(NULL为全局监听)
 		);
+*/
+	KDialog dlg(theApp.m_hInstance, this->GetSafeHwnd());
+//	CMyDlg dlg;
+//	CString result;
+//	dlg.CreateModeDlg(_T("123"), CRect(0, 0, 100, 100), TRUE, this);
 
-		if (hHook == NULL)
-		{
-			WCHAR text[30]{ 0 };
-			wsprintf(text, L"键盘监听失败！错误码 : %d", GetLastError());
-			MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
-		}
-		//	TextOutA(hDC, 30, 10, , 20);
-		CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
-		this->SetFocus();
+	INT_PTR nResponse = dlg.DoModal();
 
+	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
+	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
+	else if (nResponse == -1) MessageBox(L"SHFD", L"rewrew", MB_OK);
+
+	if (hHook == NULL)
+	{
+		WCHAR text[30]{ 0 };
+		wsprintf(text, L"键盘监听失败！错误码 : %d", GetLastError());
+		MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
+		return;
 	}
+	//	TextOutA(hDC, 30, 10, , 20);
+	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
+	this->SetFocus();
+
+//	}
 }
 
 
