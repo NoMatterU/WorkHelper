@@ -333,8 +333,8 @@ else if (keyNum->vkCode == VK_NUMLOCK || (keyNum->vkCode >= VK_NUMPAD0 && keyNum
 	}
 	else {
 	}
-
 }
+
 SaveFile << '\t' << time << endl;
 }
 */
@@ -370,12 +370,14 @@ void CWorkHelperDlg::OnBnClickedStart()
 			0               // ¼àÌý´°¿Ú¾ä±ú(NULLÎªÈ«¾Ö¼àÌý)
 		);
 */
-	KDialog dlg(theApp.m_hInstance, this->GetSafeHwnd());
+//	KDialog dlg(theApp.m_hInstance, this->GetSafeHwnd());
 //	CMyDlg dlg;
 //	CString result;
 //	dlg.CreateModeDlg(_T("123"), CRect(0, 0, 100, 100), TRUE, this);
-
-	INT_PTR nResponse = dlg.DoModal();
+	KDialog dlg(this->GetSafeHwnd(), theApp.m_hInstance);
+	INT_PTR nResponse = NULL;
+	if (dlg.OnInitDialog())
+	 nResponse = dlg.DoModal();
 
 	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
 	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
