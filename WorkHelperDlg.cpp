@@ -374,10 +374,10 @@ void CWorkHelperDlg::OnBnClickedStart()
 //	CMyDlg dlg;
 //	CString result;
 //	dlg.CreateModeDlg(_T("123"), CRect(0, 0, 100, 100), TRUE, this);
-	KDialog dlg(this->GetSafeHwnd(), theApp.m_hInstance);
+	KDialog dlg(this->GetSafeHwnd());
 	INT_PTR nResponse = NULL;
-	if (dlg.OnInitDialog())
-	 nResponse = dlg.DoModal();
+
+	nResponse = dlg.DoModal();
 
 	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
 	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
@@ -390,7 +390,7 @@ void CWorkHelperDlg::OnBnClickedStart()
 		MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
 		return;
 	}
-	//	TextOutA(hDC, 30, 10, , 20);
+
 	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 	this->SetFocus();
 
