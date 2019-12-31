@@ -1,8 +1,12 @@
 #pragma once
 #include "stdafx.h"
 
+//窗口大小
 #define DEFAULTHEIGHT 260
 #define DEFAULTWIDTH 400
+//文件 窗口字串最大长度
+#define MAXFILENAME 30 + 1
+#define MAXCLASSNAME 20 + 1
 
 class KDialog
 {
@@ -12,15 +16,13 @@ public:
 		RegisterWindow();
 	};
 
-	KDialog(HWND hWnd, PWSTR &&ClassName = NULL) {
-		if(ClassName) StrCpyW(m_szAppName, ClassName);
+	KDialog(HWND hWnd, int Height = DEFAULTHEIGHT, int Width = DEFAULTWIDTH) : m_cHenght(Height), m_cWidth(Width)
+	{
 		RegisterWindow();
 		m_hParent = hWnd;
 	}
 
 	~KDialog() {};
-
-	virtual INT_PTR DoModal();
 
 protected:
 
@@ -28,10 +30,11 @@ protected:
 	static LRESULT CALLBACK WndProc(HWND hWnd,
 		UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	BOOL CreateWindows();
+	bool CreateWindows();
 
 private:
-	VOID RegisterWindow() {
+
+	void RegisterWindow() {
 		m_Wnd.style = CS_HREDRAW | CS_VREDRAW;                        //窗口样式
 		m_Wnd.lpfnWndProc = WndProc;                                        //窗口的回调函数
 		m_Wnd.hInstance = NULL;                                    //窗口实例句柄
@@ -45,7 +48,9 @@ private:
 		RegisterClass(&m_Wnd);
 	};
 
-	WCHAR m_szAppName[20]{L"Demo"};
+	WCHAR m_szAppName[MAXCLASSNAME]{L"OpnFileDlg"};
+	static HWND  m_hWnd;
+	static HWND m_hParent;
 
 	HWND m_hChild[4]{ 0 };
 
@@ -53,9 +58,15 @@ private:
 
 	int m_cHenght{ DEFAULTHEIGHT };
 	int m_cWidth{ DEFAULTWIDTH };
+
 public:
-	static HWND  m_hWnd;
-	static HWND m_hParent;
+	virtual INT_PTR DoModal();
+
+	void SetClassName(PWCH &&className) {
+		if (className) StrCpyW(m_szAppName, className);
+	}
+
+	static WCHAR m_FileName[MAXFILENAME];
 };
 
 

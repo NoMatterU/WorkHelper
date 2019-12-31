@@ -7,7 +7,9 @@
 #define	ID_STATIC	1003
 
 HWND KDialog::m_hWnd = NULL;
+//HINSTANCE KDialog::m_hInst = NULL;
 HWND KDialog::m_hParent = NULL;
+WCHAR KDialog::m_FileName[]{ 0 };
 bool iLoseForce = false;
 /* 声明回调函数 */
 //LRESULT CALLBACK KDialog::WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -39,21 +41,19 @@ LRESULT CALLBACK KDialog::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lP
 //		MoveWindow(hChild[2], rect.left + cxChar * 12, 210, cxChar * 12, cyChar * 7 / 4, TRUE);
 //		return 0;
 	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case ID_OKBTN:
+		if (ID_OKBTN == LOWORD(wParam)) {
+
 			if (HIWORD(wParam) == BN_CLICKED) {
-				MessageBoxA(m_hWnd, "ASDA", "ewrer", MB_OK);
+				if (MAXFILENAME > GetWindowTextLength(m_hWnd))
+					GetWindowText(GetDlgItem(m_hWnd, ID_EDIT), m_FileName, MAXFILENAME);
 			}
 			return 0;
-		case ID_CANCELBTN:
-			if (HIWORD(wParam) == BN_CLICKED) {
-				MessageBoxA(m_hWnd, "DAFDS", "rwgfd", MB_OK);
-			}
-			return 0;
-		default:
-			break;
 		}
-		return 0;
+		else if(ID_CANCELBTN == LOWORD(wParam)) {
+			if (HIWORD(wParam) == BN_CLICKED) DestroyWindow(m_hWnd);
+			return 0;
+		}
+		break;
 
 	case WM_PAINT:             //处理窗口产生无效区域时发来的消息
 		GetClientRect(hwnd, &rect);
@@ -70,7 +70,7 @@ LRESULT CALLBACK KDialog::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lP
 
 	case WM_NCACTIVATE:
 		if (wParam == 0) iLoseForce = true;
-		return 0;
+		break;
 	}
 
 	return DefWindowProc(hwnd, umsg, wParam, lParam);
@@ -78,17 +78,18 @@ LRESULT CALLBACK KDialog::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lP
 
 
 /* 创建控件 */
-BOOL KDialog::CreateWindows()
+bool KDialog::CreateWindows()
 {
 	RECT rect{ 0 };
 	GetWindowRect(m_hParent, &rect);
 
 	/* 创建Login窗口 */
-	m_hWnd = CreateWindow(m_szAppName, TEXT("登录"),
+	m_hWnd = CreateWindow(m_szAppName, TEXT("保存消息文件"),
 		WS_EX_LAYERED | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		rect.left + 100, rect.top + 20,
 		m_cWidth, m_cHenght,
 		m_hParent, NULL, NULL, NULL);
+	if (!m_hWnd) return false;
 
 	/* 创建UserName文本框 */
 	m_hChild[0] = CreateWindow(TEXT("EDIT"), NULL,
@@ -113,8 +114,10 @@ BOOL KDialog::CreateWindows()
 		DEFAULTWIDTH / 4 - 80 / 2, DEFAULTHEIGHT / 4 - 30 / 2, 80, 30,
 		m_hWnd, (HMENU)ID_STATIC, NULL, NULL);
 
-	if (!(m_hWnd && m_hChild[0] && m_hChild[1] && m_hChild[2] && m_hChild[3])) return false;
-
+	if (!(m_hChild[0] && m_hChild[1] && m_hChild[2] && m_hChild[3])) {
+		DestroyWindow(m_hWnd);
+		return false;
+	}
 
 	/* 显示与更新窗口 */
 	ShowWindow(m_hWnd, SW_SHOW);
@@ -126,22 +129,25 @@ INT_PTR KDialog::DoModal() {
 	MSG msg;
 
 	if(!CreateWindows()) return -1;
+
 	/* 从消息队列中获取消息 */
 	while (GetMessageW(&msg, NULL, 0, 0))
 	{
-		if (iLoseForce) if (msg.hwnd == m_hParent) {
-			if (GetForegroundWindow() == m_hParent) {
-				FLASHWINFO fw;
-				fw.cbSize = sizeof(FLASHWINFO);
-				fw.dwFlags = FLASHW_CAPTION;
-				fw.hwnd = m_hWnd;
-				fw.uCount = 3;
-				fw.dwTimeout = 300;
-				FlashWindowEx(&fw);
-				SetForegroundWindow(m_hWnd);
-				SetFocus(m_hWnd);
+		if (iLoseForce) {
+			if (msg.hwnd == m_hParent) {
+				if (GetForegroundWindow() == m_hParent) {
+					FLASHWINFO fw;
+					fw.cbSize = sizeof(FLASHWINFO);
+					fw.dwFlags = FLASHW_CAPTION;
+					fw.hwnd = m_hWnd;
+					fw.uCount = 3;
+					fw.dwTimeout = 300;
+					FlashWindowEx(&fw);
+					SetForegroundWindow(m_hWnd);
+					SetFocus(m_hWnd);
+				}
+				iLoseForce = false;
 			}
-			iLoseForce = false;
 		}
 
 		TranslateMessage(&msg);     //将虚拟键消息转换为字符消息

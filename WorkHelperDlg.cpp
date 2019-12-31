@@ -378,7 +378,7 @@ void CWorkHelperDlg::OnBnClickedStart()
 	INT_PTR nResponse = NULL;
 
 	nResponse = dlg.DoModal();
-
+	MessageBox(KDialog::m_FileName, L"CNMB", MB_OK);
 	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
 	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
 	else if (nResponse == -1) MessageBox(L"SHFD", L"rewrew", MB_OK);
