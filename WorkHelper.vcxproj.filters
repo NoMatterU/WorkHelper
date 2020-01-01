@@ -47,13 +47,13 @@
     <ClCompile Include="WorkHelperDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ListenKey.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="OpnFileDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

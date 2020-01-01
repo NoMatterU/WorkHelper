@@ -345,7 +345,6 @@ void CWorkHelperDlg::OnBnClickedOk()
 	//	CDialogEx::OnOK();
 }
 
-
 void CWorkHelperDlg::OnBnClickedCancel()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -360,8 +359,12 @@ void CWorkHelperDlg::OnBnClickedStart()
 /*	
 	CFileDialog FileDlg(true, NULL, L"*", OFN_ALLOWMULTISELECT | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK,
 		TEXT("所有文件(*.*)|*.*|JPEG文件(*.jpg)|*.jpg|PNG文件(*.png)|*.png|BMP文件(*.bmp)|*.bmp||"), this);
+*/
+	KDialog dlg(this->GetSafeHwnd());
 
-	if (IDOK == FileDlg.DoModal()) {
+//	INT_PTR nResponse = dlg.DoModal();
+
+	if (IDOK == dlg.DoModal()) {
 
 		hHook = SetWindowsHookEx(
 			WH_KEYBOARD_LL,    // 监听类型【鼠标】
@@ -369,19 +372,16 @@ void CWorkHelperDlg::OnBnClickedStart()
 			theApp.m_hInstance,      // 当前实例句柄
 			0               // 监听窗口句柄(NULL为全局监听)
 		);
-*/
+	}
+	else return;
 //	KDialog dlg(theApp.m_hInstance, this->GetSafeHwnd());
 //	CMyDlg dlg;
 //	CString result;
 //	dlg.CreateModeDlg(_T("123"), CRect(0, 0, 100, 100), TRUE, this);
-	KDialog dlg(this->GetSafeHwnd());
-	INT_PTR nResponse = NULL;
-
-	nResponse = dlg.DoModal();
-	MessageBox(KDialog::m_FileName, L"CNMB", MB_OK);
-	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
-	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
-	else if (nResponse == -1) MessageBox(L"SHFD", L"rewrew", MB_OK);
+//	MessageBox(dlg.GetFileName(), L"CNMB", MB_OK);
+//	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
+//	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
+//	else if (nResponse == -1) MessageBox(L"SHFD", L"rewrew", MB_OK);
 
 	if (hHook == NULL)
 	{
@@ -394,7 +394,6 @@ void CWorkHelperDlg::OnBnClickedStart()
 	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 	this->SetFocus();
 
-//	}
 }
 
 
@@ -410,8 +409,10 @@ void CWorkHelperDlg::OnBnClickedFinish()
 	this->SetFocus();
 }
 
+//失败消息引发的退出程序
 LRESULT CWorkHelperDlg::OnEndHook(WPARAM wParam, LPARAM lParam) {
 	CListenKey::getInstance().ExitHook();
 	::UnhookWindowsHookEx(hHook);
+	CListenKey::getInstance().TextOutStatic("", " ", " ");
 	return LRESULT(NULL);
 }

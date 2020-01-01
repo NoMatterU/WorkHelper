@@ -49,6 +49,7 @@ private:
 	};
 
 	WCHAR m_szAppName[MAXCLASSNAME]{L"OpnFileDlg"};
+	static WCHAR m_FileName[MAXFILENAME];
 	static HWND  m_hWnd;
 	static HWND m_hParent;
 
@@ -66,7 +67,9 @@ public:
 		if (className) StrCpyW(m_szAppName, className);
 	}
 
-	static WCHAR m_FileName[MAXFILENAME];
+	const PWCH GetFileName() {
+		return m_FileName;
+	}
 };
 
 
