@@ -36,7 +36,9 @@ protected:
 
 private:
 	HWND m_hWnd;
+	HCURSOR m_hArrow;//{ m_hArrow = GetCursor() };
 public:
+	static HWND hwnd;
 	static HDC hDC;
 	static HHOOK hHook;
 	afx_msg void OnBnClickedOk();
@@ -45,4 +47,7 @@ public:
 	afx_msg void OnBnClickedStart();
 	afx_msg void OnBnClickedFinish();
 
+	afx_msg void OnBnClickedStart2();
+	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+	afx_msg void OnBnClickedFinish2();
 };

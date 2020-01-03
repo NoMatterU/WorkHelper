@@ -9,6 +9,7 @@
 #include "ListenKey.h"
 #include "OpnFileDlg.h"
 
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -18,7 +19,7 @@
 //HWND CWorkHelperDlg::m_hWnd = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
 HHOOK CWorkHelperDlg::hHook = NULL;
-
+HWND CWorkHelperDlg::hwnd = NULL;
 //bool g_bCapsLock{false}, g_bShift{false};
 /*
 bool iFirst{ true };
@@ -133,6 +134,9 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_FINISH, &CWorkHelperDlg::OnBnClickedFinish)
 	ON_MESSAGE(WM_ENDHOOK, &CWorkHelperDlg::OnEndHook)
 
+	ON_BN_CLICKED(IDC_START2, &CWorkHelperDlg::OnBnClickedStart2)
+	ON_WM_SETCURSOR()
+	ON_BN_CLICKED(IDC_FINISH2, &CWorkHelperDlg::OnBnClickedFinish2)
 END_MESSAGE_MAP()
 
 
@@ -157,12 +161,14 @@ BOOL CWorkHelperDlg::OnInitDialog()
 		exit(-1);
 	}
 	
+	hwnd = GetDlgItem(IDC_EDIT2)->GetSafeHwnd();
+//	m_hArrow = LoadCursorFromFile(L"C:\\Windows\\Cursor\\aero_arrow_l.cur");
 //	SaveFile.open("Journal.txt", ios_base::out);
 //	if (!SaveFile.is_open()) {
 //		MessageBox(L"文件打开失败!", L"ERROR", MB_OK|MB_ICONERROR);
 //		exit(-1);
 //	}
-
+	m_hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 	return FALSE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -293,7 +299,8 @@ end:
 */
 
 
-/*			//处理字母大小写
+/*			
+//处理字母大小写
 if ((keyNum->vkCode == VK_CAPITAL) || (keyNum->vkCode == VK_LSHIFT) || (keyNum->vkCode == VK_RETURN)
 	|| (keyNum->vkCode >= 65 && keyNum->vkCode <= 90)) {
 
@@ -393,7 +400,6 @@ void CWorkHelperDlg::OnBnClickedStart()
 
 	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 	this->SetFocus();
-
 }
 
 
@@ -413,6 +419,54 @@ void CWorkHelperDlg::OnBnClickedFinish()
 LRESULT CWorkHelperDlg::OnEndHook(WPARAM wParam, LPARAM lParam) {
 	CListenKey::getInstance().ExitHook();
 	::UnhookWindowsHookEx(hHook);
-	CListenKey::getInstance().TextOutStatic("", " ", " ");
+	CListenKey::getInstance().TextOutStatic(" ", " ", " ");
 	return LRESULT(NULL);
+}
+
+
+void CWorkHelperDlg::OnBnClickedStart2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
+	//LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS));
+//	SetCursor(hCur);
+//	HCURSOR hCur = GetCursor();
+	if(SetSystemCursor(hCur, OCR_NORMAL)) MessageBox(L"CNMB", L"SB", MB_OK);
+	DestroyCursor(hCur);
+	//	::SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)hCur);
+}
+
+
+BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+//	::SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_NO)));
+//	return true;
+	return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
+}
+
+void fun(void *) {
+	while (true) {
+		if (GetKeyState(VK_LBUTTON) < 0) {
+			POINT point{ 0 };
+			WCHAR arr[60]{ 0 }, title[30]{ 0 };
+			GetCursorPos(&point);
+			HWND hWnd = WindowFromPoint(point);
+			GetWindowText(hWnd, title, 29);
+			wsprintfW(arr, L"标题: %s\t0x%X", title, hWnd);
+			SetWindowText(CWorkHelperDlg::hwnd, arr);
+			Sleep(200);
+			break;
+		}
+	}
+}
+
+void CWorkHelperDlg::OnBnClickedFinish2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+//	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
+//	std::thread t(fun);
+//	t.join();
+//	t.join();
+	if (SetSystemCursor(CopyCursor(m_hArrow), OCR_NORMAL)) MessageBox(L"CNMB", L"SB", MB_OK);
 }

@@ -4,6 +4,7 @@
 // but are changed infrequently
 
 #pragma once
+#define OEMRESOURCE
 
 #ifndef VC_EXTRALEAN
 #define VC_EXTRALEAN            // Exclude rarely-used stuff from Windows headers
@@ -51,9 +52,9 @@
 #endif
 #endif
 
-
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 using namespace std;
 
