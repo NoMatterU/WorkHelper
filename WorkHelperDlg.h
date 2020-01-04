@@ -34,18 +34,20 @@ protected:
 	void EndDialog(int nResult);
 	DECLARE_MESSAGE_MAP()
 
-private:
-	HWND m_hWnd;
-	HCURSOR m_hArrow;//{ m_hArrow = GetCursor() };
+	//Myself Defined functions
+	void FindMsgFile();
 public:
-	static HWND hwnd;
+
+public:
+	static HWND hTarget;
 	static HDC hDC;
-	static HHOOK hHook;
+
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCancel();
-	afx_msg LRESULT OnEndHook(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedStart();
 	afx_msg void OnBnClickedFinish();
+	afx_msg LRESULT OnEndHook(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnControlKey(WPARAM wParam, LPARAM lParam);
 
 	afx_msg void OnBnClickedStart2();
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);

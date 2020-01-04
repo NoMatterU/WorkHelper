@@ -54,13 +54,15 @@
 
 #include <iostream>
 #include <fstream>
-#include <thread>
 
 using namespace std;
 
+#ifndef WIN_MSG
+#define WIN_MSG
 struct MyMSG {
 	USHORT Interval;
 	UINT message;
 	WPARAM wParam;
 	LPARAM lParam;
 };
+#endif

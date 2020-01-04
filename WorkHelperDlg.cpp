@@ -8,18 +8,24 @@
 #include "afxdialogex.h"
 #include "ListenKey.h"
 #include "OpnFileDlg.h"
+#include "ControlKey.h"
 
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
 // CWorkHelperDlg dialog
 //HWND CWorkHelperDlg::m_hWnd = NULL;
+//HCURSOR CWorkHelperDlg::m_hArrow = NULL;
+//HHOOK CWorkHelperDlg::hHook = NULL;
+HWND hStatic = NULL;
+HCURSOR hArrow = NULL;
+HWND hEdit = NULL;
+HHOOK hHook = NULL;
+HWND hMain = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
-HHOOK CWorkHelperDlg::hHook = NULL;
-HWND CWorkHelperDlg::hwnd = NULL;
+HWND CWorkHelperDlg::hTarget = NULL;
 //bool g_bCapsLock{false}, g_bShift{false};
 /*
 bool iFirst{ true };
@@ -133,6 +139,7 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_START, &CWorkHelperDlg::OnBnClickedStart)
 	ON_BN_CLICKED(IDC_FINISH, &CWorkHelperDlg::OnBnClickedFinish)
 	ON_MESSAGE(WM_ENDHOOK, &CWorkHelperDlg::OnEndHook)
+	ON_MESSAGE(WM_CTLKEY, &CWorkHelperDlg::OnControlKey)
 
 	ON_BN_CLICKED(IDC_START2, &CWorkHelperDlg::OnBnClickedStart2)
 	ON_WM_SETCURSOR()
@@ -153,22 +160,25 @@ BOOL CWorkHelperDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	// 设置鼠标全局监听
-	m_hWnd = this->GetDlgItem(IDC_STATIC)->GetSafeHwnd();
-	hDC = ::GetDC(m_hWnd);
+	hStatic = this->GetDlgItem(IDC_STATIC)->GetSafeHwnd();
+	hMain = this->GetSafeHwnd();
+	hDC = ::GetDC(hStatic);
 
 	if (!hDC || !m_hWnd) {
 		MessageBox(L"初始化程序失败", L"ERROR", MB_OK | MB_ICONERROR);
 		exit(-1);
 	}
 	
-	hwnd = GetDlgItem(IDC_EDIT2)->GetSafeHwnd();
+	hEdit = GetDlgItem(IDC_EDIT)->GetSafeHwnd();
 //	m_hArrow = LoadCursorFromFile(L"C:\\Windows\\Cursor\\aero_arrow_l.cur");
 //	SaveFile.open("Journal.txt", ios_base::out);
 //	if (!SaveFile.is_open()) {
 //		MessageBox(L"文件打开失败!", L"ERROR", MB_OK|MB_ICONERROR);
 //		exit(-1);
 //	}
-	m_hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+	hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+
+	FindMsgFile();
 	return FALSE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -209,7 +219,7 @@ HCURSOR CWorkHelperDlg::OnQueryDragIcon()
 }
 
 void CWorkHelperDlg::EndDialog(int nResult) {
-	::ReleaseDC(m_hWnd, hDC);
+	::ReleaseDC(hStatic, hDC);
 //	SaveFile.close();
 }
 
@@ -346,6 +356,32 @@ SaveFile << '\t' << time << endl;
 }
 */
 
+void CWorkHelperDlg::FindMsgFile()
+{
+	WIN32_FIND_DATA findData;
+
+	CComboBox *pCombo = (CComboBox *)GetDlgItem(IDC_COMBO);
+
+	if (pCombo) {
+		CString strTemp = L".\\*.*";
+//		strTemp.Format(_T(".\\*.*"), strPath);//查找指定目录下的直接的所有文件和目录
+
+		HANDLE hFile = FindFirstFile(strTemp, &findData);
+		while (hFile != INVALID_HANDLE_VALUE)
+		{
+			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)//如果是目录
+			{
+				if (findData.cFileName[0] != _T('.'))//排除.和..文件夹
+					pCombo->AddString(findData.cFileName);
+			}
+
+			if (!FindNextFile(hFile, &findData)) break;
+
+		}
+	}
+}
+
+
 void CWorkHelperDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -363,11 +399,7 @@ void CWorkHelperDlg::OnBnClickedCancel()
 void CWorkHelperDlg::OnBnClickedStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
-/*	
-	CFileDialog FileDlg(true, NULL, L"*", OFN_ALLOWMULTISELECT | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK,
-		TEXT("所有文件(*.*)|*.*|JPEG文件(*.jpg)|*.jpg|PNG文件(*.png)|*.png|BMP文件(*.bmp)|*.bmp||"), this);
-*/
-	KDialog dlg(this->GetSafeHwnd());
+	OpnFileDlg dlg(this->GetSafeHwnd());
 
 //	INT_PTR nResponse = dlg.DoModal();
 
@@ -423,16 +455,52 @@ LRESULT CWorkHelperDlg::OnEndHook(WPARAM wParam, LPARAM lParam) {
 	return LRESULT(NULL);
 }
 
+LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
+{
+	CString msgfile;
+	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
+	pComb->GetWindowTextW(msgfile);
+//	MessageBox(msgfile, L"OnControlKey", MB_OK);
+//	CControlKey ck(msgfile);
+//	ck.varControlKey();
+	return LRESULT(NULL);
+}
+
+void fun(void *) {
+	while (true) {
+		if (GetKeyState(VK_LBUTTON) < 0) {
+			POINT point{ 0 };
+			WCHAR arr[60]{ 0 }, title[30]{ 0 };
+			GetCursorPos(&point);
+			HWND hTarget = WindowFromPoint(point);
+			GetWindowText(hTarget, title, 29);
+			wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hTarget);
+			SetWindowText(hEdit, arr);
+			CWorkHelperDlg::hTarget = hTarget;
+			Sleep(200);
+			//如果还原光标失败 请到控制面板的鼠标选项里还原
+			if (!SetSystemCursor(hArrow, OCR_NORMAL)) MessageBoxA(NULL, "光标还原失败！", "错误", MB_OK | MB_ICONERROR);
+			::SendMessage(hMain, WM_CTLKEY, NULL, NULL);
+			break;
+		}
+	}
+}
 
 void CWorkHelperDlg::OnBnClickedStart2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
-	//LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS));
+	//HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
 //	SetCursor(hCur);
 //	HCURSOR hCur = GetCursor();
-	if(SetSystemCursor(hCur, OCR_NORMAL)) MessageBox(L"CNMB", L"SB", MB_OK);
-	DestroyCursor(hCur);
+	hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+
+	HCURSOR hCur = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
+	if (!SetSystemCursor(hCur, OCR_NORMAL)) {
+		MessageBox(L"控键失败!", L"错误", MB_OK | MB_ICONERROR);
+		return;
+	}
+	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
+
 	//	::SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)hCur);
 }
 
@@ -445,28 +513,11 @@ BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 	return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
 }
 
-void fun(void *) {
-	while (true) {
-		if (GetKeyState(VK_LBUTTON) < 0) {
-			POINT point{ 0 };
-			WCHAR arr[60]{ 0 }, title[30]{ 0 };
-			GetCursorPos(&point);
-			HWND hWnd = WindowFromPoint(point);
-			GetWindowText(hWnd, title, 29);
-			wsprintfW(arr, L"标题: %s\t0x%X", title, hWnd);
-			SetWindowText(CWorkHelperDlg::hwnd, arr);
-			Sleep(200);
-			break;
-		}
-	}
-}
 
 void CWorkHelperDlg::OnBnClickedFinish2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-//	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
 //	std::thread t(fun);
 //	t.join();
 //	t.join();
-	if (SetSystemCursor(CopyCursor(m_hArrow), OCR_NORMAL)) MessageBox(L"CNMB", L"SB", MB_OK);
 }

@@ -185,6 +185,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ControlKey.h" />
     <ClInclude Include="ListenKey.h" />
     <ClInclude Include="OpnFileDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -194,6 +195,7 @@
     <ClInclude Include="WorkHelperDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ControlKey.cpp" />
     <ClCompile Include="ListenKey.cpp" />
     <ClCompile Include="OpnFileDlg.cpp" />
     <ClCompile Include="stdafx.cpp">

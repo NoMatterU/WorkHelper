@@ -6,10 +6,10 @@
 #define	ID_CANCELBTN	1002
 #define	ID_STATIC	1003
 
-HWND KDialog::m_hWnd = NULL;
+HWND OpnFileDlg::m_hWnd = NULL;
 //HINSTANCE KDialog::m_hInst = NULL;
-HWND KDialog::m_hParent = NULL;
-WCHAR KDialog::m_FileName[]{ 0 };
+HWND OpnFileDlg::m_hParent = NULL;
+WCHAR OpnFileDlg::m_FileName[]{ 0 };
 bool iLoseForce = false;
 INT_PTR retModel = NULL;
 /* 声明回调函数 */
@@ -17,7 +17,7 @@ INT_PTR retModel = NULL;
 
 
 /* 回调函数 */
-LRESULT CALLBACK KDialog::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam)
 {
 	HDC	hdc = NULL;
 	PAINTSTRUCT	ps{ 0 };
@@ -80,7 +80,7 @@ LRESULT CALLBACK KDialog::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lP
 
 
 /* 创建控件 */
-bool KDialog::CreateWindows()
+bool OpnFileDlg::CreateWindows()
 {
 	RECT rect{ 0 };
 	GetWindowRect(m_hParent, &rect);
@@ -128,7 +128,7 @@ bool KDialog::CreateWindows()
 	return true;
 }
 
-INT_PTR KDialog::DoModal() {
+INT_PTR OpnFileDlg::DoModal() {
 	MSG msg;
 
 	if(!CreateWindows()) return -1;
