@@ -26,99 +26,7 @@ HHOOK hHook = NULL;
 HWND hMain = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
 HWND CWorkHelperDlg::hTarget = NULL;
-//bool g_bCapsLock{false}, g_bShift{false};
-/*
-bool iFirst{ true };
-MyMSG msgBuf[MAX_BUF_SIZE]{ 0 };
-int msgIndex{ 0 };
-DWORD startTime{ 0 }, lastTime{ 0 };
-*/
-//ofstream SaveFile("");
-/*
-//add 文字居中显示
-void TextOutStatic(const char *text1, const char *text2 = NULL, const char *text3 = NULL) {
-	char line1[31]{ 0 }, line2[31]{ 0 }, line3[31]{ 0 };
-//	memset(line1, 0x20, 30);
-//	memset(line2, 0x20, 30);
-//	memset(line3, 0x20, 30);
-	if (text1 != NULL) {
-		strcpy_s(line1, text1);
-		TextOutA(CWorkHelperDlg::hDC, 60, 25, line1, 30);
-	}
-	if (text2 != NULL) {
-		strcpy_s(line2, text2);
-		TextOutA(CWorkHelperDlg::hDC, 60, 55, line2, 30);
-	}
-	if (text3 != NULL) {
-		strcpy_s(line3, text3);
-		TextOutA(CWorkHelperDlg::hDC, 60, 85, line3, 30);
-	}
-}
 
-void ExitHook() {
-	memset(msgBuf, 0, sizeof(MyMSG) * MAX_BUF_SIZE);
-	iFirst = true;
-	msgIndex = 0;
-	startTime = 0;
-	lastTime = 0;
-	UnhookWindowsHookEx(CWorkHelperDlg::hHook);
-}
-
-bool CheckTime(DWORD curTime) {
-	DWORD interTime = curTime - lastTime, totalTime = curTime - startTime;
-	if (interTime < 65536 && interTime >= 0)
-		if (totalTime < 0xFF000000 && totalTime >= 0) return true;
-	return false;
-}
-
-bool IsBufFull() {
-	if (msgIndex >= MAX_BUF_SIZE) return true;
-	return false;
-}
-
-bool SaveMsg2File() {
-	if (SaveFile.is_open()) 
-		if(msgIndex <= MAX_BUF_SIZE && msgIndex > 0)
-			if(SaveFile.write((char *)msgBuf, sizeof(MyMSG)*msgIndex))
-				return true;
-	return false;
-}
-
-void PushMsgBuf(USHORT Interval, UINT message, WPARAM wParam, LPARAM lParam) {
-	MyMSG msg{ Interval, message, wParam, lParam };
-	if (msgIndex < MAX_BUF_SIZE) {
-		msgBuf[msgIndex] = msg;
-		msgIndex++;
-	}
-}
-
-void KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {
-	if (vkCode >= 'A' && vkCode <= 'Z') {
-		if(iKeyUp) sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键弹起   ", vkCode);
-		else sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键按下   ", vkCode);
-	}
-	else if (vkCode >= VK_NUMPAD0 && vkCode <= VK_NUMPAD9) {
-		if(iKeyUp) sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键弹起   ", 48 + vkCode - 96);
-		else sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键按下   ", 48 + vkCode - 96);
-	}
-	else if (vkCode == VK_LEFT) { 
-		if(iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键← 键弹起");
-		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键← 键按下");
-	}
-	else if (vkCode == VK_UP) {
-		if(iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↑ 键弹起");
-		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↑ 键按下");
-	}
-	else if (vkCode == VK_RIGHT) {
-		if(iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键→ 键弹起");
-		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键→ 键按下");
-	}
-	else if(vkCode == VK_DOWN) {
-		if(iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↓ 键弹起");
-		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↓ 键按下");
-	}
-}
-*/
 CWorkHelperDlg::CWorkHelperDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_WORKHELPER_DIALOG, pParent)
 {
@@ -141,9 +49,9 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_MESSAGE(WM_ENDHOOK, &CWorkHelperDlg::OnEndHook)
 	ON_MESSAGE(WM_CTLKEY, &CWorkHelperDlg::OnControlKey)
 
-	ON_BN_CLICKED(IDC_START2, &CWorkHelperDlg::OnBnClickedStart2)
+	ON_BN_CLICKED(IDC_START1, &CWorkHelperDlg::OnBnClickedStart1)
 	ON_WM_SETCURSOR()
-	ON_BN_CLICKED(IDC_FINISH2, &CWorkHelperDlg::OnBnClickedFinish2)
+	ON_BN_CLICKED(IDC_FINISH1, &CWorkHelperDlg::OnBnClickedFinish1)
 END_MESSAGE_MAP()
 
 
@@ -176,7 +84,7 @@ BOOL CWorkHelperDlg::OnInitDialog()
 //		MessageBox(L"文件打开失败!", L"ERROR", MB_OK|MB_ICONERROR);
 //		exit(-1);
 //	}
-	hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+	hArrow = CopyCursor(LoadCursorW(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 
 	FindMsgFile();
 	return FALSE;  // return TRUE  unless you set the focus to a control
@@ -220,7 +128,6 @@ HCURSOR CWorkHelperDlg::OnQueryDragIcon()
 
 void CWorkHelperDlg::EndDialog(int nResult) {
 	::ReleaseDC(hStatic, hDC);
-//	SaveFile.close();
 }
 
 /****************************************************************
@@ -460,9 +367,24 @@ LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
 	CString msgfile;
 	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
 	pComb->GetWindowTextW(msgfile);
-//	MessageBox(msgfile, L"OnControlKey", MB_OK);
-//	CControlKey ck(msgfile);
-//	ck.varControlKey();
+	MessageBox(msgfile, L"OnControlKey", MB_OK);
+
+	CControlKey *pck = CControlKey::getInstance();
+
+	if (!pck->InitFile(L"./Journal.txt")) {
+		MessageBox(L"CNMB", L"SB", MB_OK);
+		return;
+	}
+
+//	if(m_pthread1 == NULL)
+		m_pthread1 = AfxBeginThread(pck->LoadMsgBuffer, this, THREAD_PRIORITY_NORMAL, 0, 0);
+
+//	if (m_pthread2 == NULL)
+		m_pthread2 = AfxBeginThread(pck->varControlKey, this, THREAD_PRIORITY_NORMAL, 0, 0);
+/*
+	SuspendThread(m_pthread2->m_hThread); //挂起第二个线程。“暂停”
+	ResumeThread(m_pthread2->m_hThread); //释放第二个线程。”播放“
+*/
 	return LRESULT(NULL);
 }
 
@@ -486,10 +408,10 @@ void fun(void *) {
 	}
 }
 
-void CWorkHelperDlg::OnBnClickedStart2()
+void CWorkHelperDlg::OnBnClickedStart1()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	//HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
+//	HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
 //	SetCursor(hCur);
 //	HCURSOR hCur = GetCursor();
 	hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
@@ -514,7 +436,7 @@ BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 }
 
 
-void CWorkHelperDlg::OnBnClickedFinish2()
+void CWorkHelperDlg::OnBnClickedFinish1()
 {
 	// TODO: 在此添加控件通知处理程序代码
 //	std::thread t(fun);

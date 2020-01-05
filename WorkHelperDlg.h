@@ -36,8 +36,9 @@ protected:
 
 	//Myself Defined functions
 	void FindMsgFile();
-public:
-
+private:
+	CWinThread *m_pthread1 = NULL;
+	CWinThread *m_pthread2 = NULL; 
 public:
 	static HWND hTarget;
 	static HDC hDC;
@@ -49,7 +50,7 @@ public:
 	afx_msg LRESULT OnEndHook(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnControlKey(WPARAM wParam, LPARAM lParam);
 
-	afx_msg void OnBnClickedStart2();
+	afx_msg void OnBnClickedStart1();
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
-	afx_msg void OnBnClickedFinish2();
+	afx_msg void OnBnClickedFinish1();
 };

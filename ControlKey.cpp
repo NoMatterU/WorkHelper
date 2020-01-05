@@ -2,23 +2,70 @@
 #include "ControlKey.h"
 #include "WorkHelperDlg.h"
 
-VOID CControlKey::varControlKey()
+
+MsgBuf CControlKey::data1{ 0 };
+MsgBuf CControlKey::data2{ 0 };
+MsgBuf *CControlKey::spaDat = NULL;
+BOOL CControlKey::iFinish = false;
+BOOL iCheck = true, rdyLoad = false;
+
+UINT __cdecl CControlKey::LoadMsgBuffer(LPVOID lparam)
 {
-	if (!isOpen) return;
-	unsigned int i = 0;
-	MyMSG *ptr = data1;
+	while (true) {
+		if (rdyLoad) {
+			int count = getInstance()->ReadFile();
+			if (count < 0) spaDat->index = 0;
+			else {
+				spaDat->index = count;
+				//消息文件已经读完了
+				if (count != MAX_MSG_BUFFER) {
+					iFinish = true;
+					break;
+				}
+			}
+			rdyLoad = false;
+		}
+		Sleep(2000);
+	}
+	return;
+}
+
+UINT __cdecl CControlKey::varControlKey(LPVOID lparam)
+{
+	if (!getInstance()->IsFileOpen()) return;
+
+	MsgBuf *ptr = &data1;
+	spaDat = &data2;
+	unsigned int index = 0;
+
+	//没有完成控键后的判断
 	while (true) {
 		//发送消息给目标窗口
-		::SendMessage(CWorkHelperDlg::hTarget, ptr[i].message, ptr[i].wParam, ptr[i].lParam);
-		Sleep(ptr[i].Interval);
+		::SendMessage(CWorkHelperDlg::hTarget, ptr->data[index].message, ptr->data[index].wParam, ptr->data[index].lParam);
+		Sleep(ptr->data[index].Interval);
+
+		//到达一半的数据，读入消息文件
+		if (iCheck) if (index > ptr->index / 2) {
+			rdyLoad = true;
+			iCheck = false;
+		}
 
 		//双缓冲区数据切换
-		if (i < MAX_MSG_BUFFER) i++;
+		if (index < ptr->index) index++;
 		else {
-			if (ptr == data1) ptr = data2;
-			else ptr = data1;
-			i = 0;
+			if (ptr == &data1) {
+				ptr = &data2;
+				spaDat = &data1;
+			}
+			else {
+				ptr = &data1;
+				spaDat = &data2;
+			}
+			index = 0;
+			iCheck = true;
+			if (iFinish) goto end;
 		}
 	}
+end:
 	return;
 }
