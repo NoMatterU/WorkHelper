@@ -29,7 +29,7 @@ public:
 
 private:
 	CListenKey() {
-		m_saveFile.open("Journal.txt", ios_base::out);
+		m_saveFile.open("Journal.txt", ios_base::in | ios_base::out);
 	};
 
 	~CListenKey() {

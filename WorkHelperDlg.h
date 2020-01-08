@@ -36,6 +36,15 @@ protected:
 
 	//Myself Defined functions
 	void FindMsgFile();
+
+	//判断按下的键大小写
+	static BOOL IsHCase() {
+		BOOL cFlag = GetKeyState(VK_CAPITAL) & 0x0001;
+		BOOL sFlag = GetKeyState(VK_SHIFT) & 0x8000;
+		return cFlag ^ sFlag;
+	};
+	BOOL SetSelectMouse();
+	BOOL UnSetSelectMouse();
 private:
 	CWinThread *m_pthread1 = NULL;
 	CWinThread *m_pthread2 = NULL; 

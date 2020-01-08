@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 
-#define MAX_MSG_BUFFER 65536
+#define MAX_MSG_BUFFER 3000
 
 #ifndef WIN_MSG
 #define WIN_MSG
@@ -39,8 +39,12 @@ public:
 		m_isOpen = msgFile.Open(filename, CFile::modeRead | CFile::typeBinary);
 		if (!m_isOpen) return false;
 //		m_FileLen = msgFile.GetLength();
-		data1.index = msgFile.Read(data1.data, MAX_MSG_BUFFER);
-		if (data1.index < MAX_MSG_BUFFER) iFinish = true;
+		int ByteNum = msgFile.Read(data1.data, MAX_MSG_BUFFER * sizeof(MyMSG));
+		if (ByteNum <= 0) return false;
+		else if (ByteNum < MAX_MSG_BUFFER * sizeof(MyMSG)) {
+			data1.index = ByteNum / sizeof(MyMSG);
+			iFinish = true;
+		}
 		return true;
 	};
 

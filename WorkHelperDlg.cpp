@@ -20,7 +20,7 @@
 //HCURSOR CWorkHelperDlg::m_hArrow = NULL;
 //HHOOK CWorkHelperDlg::hHook = NULL;
 HWND hStatic = NULL;
-HCURSOR hArrow = NULL;
+HCURSOR hCur[3] = { 0 };
 HWND hEdit = NULL;
 HHOOK hHook = NULL;
 HWND hMain = NULL;
@@ -84,7 +84,6 @@ BOOL CWorkHelperDlg::OnInitDialog()
 //		MessageBox(L"文件打开失败!", L"ERROR", MB_OK|MB_ICONERROR);
 //		exit(-1);
 //	}
-	hArrow = CopyCursor(LoadCursorW(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 
 	FindMsgFile();
 	return FALSE;  // return TRUE  unless you set the focus to a control
@@ -139,6 +138,7 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 	char text[30]{ "无法识别按键" }, interval[30]{ 0 };
 	CListenKey &listen = CListenKey::getInstance();
 
+	//增加一个过滤按键功能
 	if (HC_ACTION == nCode) {
 
 		KBDLLHOOKSTRUCT *  keyNum = (KBDLLHOOKSTRUCT *)lParam;
@@ -157,9 +157,16 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 		}
 
 		if ((wParam == WM_KEYDOWN)) {		//有键按下
+			DWORD Code = keyNum->vkCode;
 			listen.KeyStatInfo(keyNum->vkCode, text, false);
 			sprintf_s(interval, "消息间隔时间 : %d ms", listen.GetIntervalTime(keyNum->time));
-			listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, keyNum->vkCode, lParam);
+			listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, Code, lParam);
+			if ((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z') ||
+					(keyNum->vkCode >= '0' && keyNum->vkCode <= '9')
+				) {
+				if (!IsHCase()) Code = tolower(keyNum->vkCode);
+				listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, Code, lParam);
+			}
 			listen.TextOutStatic(NULL, text, interval);
 		}
 		else if (wParam == WM_KEYUP) {		//有键松开
@@ -167,9 +174,9 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 			listen.PushMsgBuf(keyNum->time, WM_KEYUP, keyNum->vkCode, lParam);
 			listen.TextOutStatic(NULL, text);
 		}
-		else if (wParam == WM_CHAR) {
-			listen.PushMsgBuf(keyNum->time, WM_CHAR, keyNum->vkCode, lParam);
-		}
+//		else if (wParam == WM_CHAR) {
+//			MessageBoxA(NULL, "CNMB", "SB", MB_OK);
+//		}
 		
 		listen.UpdateTime(keyNum->time);
 	}
@@ -288,6 +295,36 @@ void CWorkHelperDlg::FindMsgFile()
 	}
 }
 
+BOOL CWorkHelperDlg::SetSelectMouse()
+{
+	hCur[0] = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+	hCur[1] = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND)));
+	hCur[2] = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_IBEAM)));
+
+	BOOL iRet = SetSystemCursor(CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS))), OCR_NORMAL);
+	iRet &= SetSystemCursor(CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS))), OCR_HAND);
+	iRet &= SetSystemCursor(CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS))), OCR_IBEAM);
+	if (!iRet) {
+		MessageBox(L"控键失败!", L"错误", MB_OK | MB_ICONERROR);
+		UnSetSelectMouse();
+		return false;
+	}
+	return true;
+}
+
+BOOL CWorkHelperDlg::UnSetSelectMouse()
+{
+	//如果还原光标失败 请到控制面板的鼠标选项里还原
+	BOOL iRet = SetSystemCursor(hCur[0], OCR_NORMAL);
+	iRet &= SetSystemCursor(hCur[1], OCR_HAND);
+	iRet &= SetSystemCursor(hCur[2], OCR_IBEAM);
+	if (!iRet) {
+		MessageBoxA(NULL, "光标还原失败！", "错误", MB_OK | MB_ICONERROR);
+		return false;
+	}
+	return true;
+}
+
 
 void CWorkHelperDlg::OnBnClickedOk()
 {
@@ -313,7 +350,7 @@ void CWorkHelperDlg::OnBnClickedStart()
 	if (IDOK == dlg.DoModal()) {
 
 		hHook = SetWindowsHookEx(
-			WH_KEYBOARD_LL,    // 监听类型【鼠标】
+			WH_KEYBOARD_LL,    // 监听类型【键盘】
 			KeyBoardProc,  // 处理函数
 			theApp.m_hInstance,      // 当前实例句柄
 			0               // 监听窗口句柄(NULL为全局监听)
@@ -366,6 +403,8 @@ LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
 {
 	CString msgfile;
 	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
+
+	UnSetSelectMouse();
 	pComb->GetWindowTextW(msgfile);
 	MessageBox(msgfile, L"OnControlKey", MB_OK);
 
@@ -373,11 +412,16 @@ LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
 
 	if (!pck->InitFile(L"./Journal.txt")) {
 		MessageBox(L"CNMB", L"SB", MB_OK);
-		return;
+		return LRESULT(NULL);
 	}
 
+	::SetForegroundWindow(hTarget);
+//	::SendMessage(hTarget, WM_KEYDOWN, 'A', NULL);
+//	::SendMessage(hTarget, WM_CHAR, 'a', NULL);
+//	::SendMessage(hTarget, WM_KEYUP, 'A', NULL);
+	//多次控键怎么办
 //	if(m_pthread1 == NULL)
-		m_pthread1 = AfxBeginThread(pck->LoadMsgBuffer, this, THREAD_PRIORITY_NORMAL, 0, 0);
+//		m_pthread1 = AfxBeginThread(pck->LoadMsgBuffer, this, THREAD_PRIORITY_NORMAL, 0, 0);
 
 //	if (m_pthread2 == NULL)
 		m_pthread2 = AfxBeginThread(pck->varControlKey, this, THREAD_PRIORITY_NORMAL, 0, 0);
@@ -394,14 +438,12 @@ void fun(void *) {
 			POINT point{ 0 };
 			WCHAR arr[60]{ 0 }, title[30]{ 0 };
 			GetCursorPos(&point);
-			HWND hTarget = WindowFromPoint(point);
-			GetWindowText(hTarget, title, 29);
-			wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hTarget);
+			HWND target = WindowFromPoint(point);
+			GetWindowText(target, title, 29);
+			wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, target);
 			SetWindowText(hEdit, arr);
-			CWorkHelperDlg::hTarget = hTarget;
+			CWorkHelperDlg::hTarget = target;
 			Sleep(200);
-			//如果还原光标失败 请到控制面板的鼠标选项里还原
-			if (!SetSystemCursor(hArrow, OCR_NORMAL)) MessageBoxA(NULL, "光标还原失败！", "错误", MB_OK | MB_ICONERROR);
 			::SendMessage(hMain, WM_CTLKEY, NULL, NULL);
 			break;
 		}
@@ -414,13 +456,8 @@ void CWorkHelperDlg::OnBnClickedStart1()
 //	HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
 //	SetCursor(hCur);
 //	HCURSOR hCur = GetCursor();
-	hArrow = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+	SetSelectMouse();
 
-	HCURSOR hCur = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
-	if (!SetSystemCursor(hCur, OCR_NORMAL)) {
-		MessageBox(L"控键失败!", L"错误", MB_OK | MB_ICONERROR);
-		return;
-	}
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
 
 	//	::SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)hCur);
@@ -429,8 +466,8 @@ void CWorkHelperDlg::OnBnClickedStart1()
 
 BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	::SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_NO)));
+//  TODO: 在此添加消息处理程序代码和/或调用默认值
+//	::SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_HELP)));
 //	return true;
 	return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
 }

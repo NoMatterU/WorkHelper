@@ -27,21 +27,22 @@ UINT __cdecl CControlKey::LoadMsgBuffer(LPVOID lparam)
 		}
 		Sleep(2000);
 	}
-	return;
+	return 0;
 }
 
 UINT __cdecl CControlKey::varControlKey(LPVOID lparam)
 {
-	if (!getInstance()->IsFileOpen()) return;
+	if (!getInstance()->IsFileOpen()) return 0;
 
 	MsgBuf *ptr = &data1;
 	spaDat = &data2;
 	unsigned int index = 0;
 
-	//没有完成控键后的判断
+	//没有完成控键后的判断 Done
 	while (true) {
 		//发送消息给目标窗口
-		::SendMessage(CWorkHelperDlg::hTarget, ptr->data[index].message, ptr->data[index].wParam, ptr->data[index].lParam);
+		::SendMessage(CWorkHelperDlg::hTarget, 
+			ptr->data[index].message, ptr->data[index].wParam, NULL);
 		Sleep(ptr->data[index].Interval);
 
 		//到达一半的数据，读入消息文件
@@ -53,6 +54,7 @@ UINT __cdecl CControlKey::varControlKey(LPVOID lparam)
 		//双缓冲区数据切换
 		if (index < ptr->index) index++;
 		else {
+			if (iFinish) goto end;
 			if (ptr == &data1) {
 				ptr = &data2;
 				spaDat = &data1;
@@ -63,9 +65,9 @@ UINT __cdecl CControlKey::varControlKey(LPVOID lparam)
 			}
 			index = 0;
 			iCheck = true;
-			if (iFinish) goto end;
 		}
 	}
 end:
-	return;
+	MessageBoxA(NULL, "控键结束!", "提示", MB_OK | MB_ICONINFORMATION);
+	return 0;
 }
