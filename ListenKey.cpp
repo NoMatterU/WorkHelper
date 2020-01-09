@@ -92,6 +92,11 @@ BOOL CListenKey::KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {
 		else sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键按下   ", 48 + vkCode - 96);
 		return true;
 	}
+	else if (vkCode == VK_SPACE) {
+		if (iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "当前 空格键 键弹起");
+		else strcpy_s(outstr, MAX_TEXT_SIZE, "当前 空格键 键按下");
+		return true;
+	}
 	else if (vkCode == VK_LEFT) {
 		if (iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键← 键弹起");
 		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键← 键按下");

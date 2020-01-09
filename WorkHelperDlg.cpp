@@ -23,7 +23,7 @@ HWND hStatic = NULL;
 HCURSOR hCur[3] = { 0 };
 HWND hEdit = NULL;
 HHOOK hHook = NULL;
-HWND hMain = NULL;
+HWND CWorkHelperDlg::hMain = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
 HWND CWorkHelperDlg::hTarget = NULL;
 
@@ -54,6 +54,8 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_FINISH1, &CWorkHelperDlg::OnBnClickedFinish1)
 
 	ON_WM_VSCROLL()
+	ON_COMMAND(ID_32771, &CWorkHelperDlg::OnScanFile)
+	ON_COMMAND(ID_32772, &CWorkHelperDlg::OnPointToHwnd)
 END_MESSAGE_MAP()
 
 
@@ -166,9 +168,11 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 				listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, Code, lParam);
 				//额外的WM_CHAR消息
 				if ((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z') ||
-						(keyNum->vkCode >= '0' && keyNum->vkCode <= '9')
+						(keyNum->vkCode >= '0' && keyNum->vkCode <= '9') ||
+							keyNum->vkCode == VK_SPACE
 					) {
-					if (!IsHCase()) Code = tolower(keyNum->vkCode);
+					if((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z')) 
+						if (!IsHCase()) Code = tolower(keyNum->vkCode);
 					listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, Code, lParam);
 				}
 			}
@@ -308,7 +312,21 @@ void CWorkHelperDlg::FindMsgFile()
 	}
 }
 
-BOOL CWorkHelperDlg::SetSelectMouse()
+
+BOOL UnSetSelectMouse()
+{
+	//如果还原光标失败 请到控制面板的鼠标选项里还原
+	BOOL iRet = SetSystemCursor(hCur[0], OCR_NORMAL);
+	iRet &= SetSystemCursor(hCur[1], OCR_HAND);
+	iRet &= SetSystemCursor(hCur[2], OCR_IBEAM);
+	if (!iRet) {
+		::MessageBoxW(NULL, L"光标还原失败！", L"错误", MB_OK | MB_ICONERROR);
+		return false;
+	}
+	return true;
+}
+
+BOOL SetSelectMouse()
 {
 	hCur[0] = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 	hCur[1] = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND)));
@@ -318,26 +336,12 @@ BOOL CWorkHelperDlg::SetSelectMouse()
 	iRet &= SetSystemCursor(CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS))), OCR_HAND);
 	iRet &= SetSystemCursor(CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS))), OCR_IBEAM);
 	if (!iRet) {
-		MessageBox(L"控键失败!", L"错误", MB_OK | MB_ICONERROR);
+		::MessageBoxW(NULL, L"控键失败!", L"错误", MB_OK | MB_ICONERROR);
 		UnSetSelectMouse();
 		return false;
 	}
 	return true;
 }
-
-BOOL CWorkHelperDlg::UnSetSelectMouse()
-{
-	//如果还原光标失败 请到控制面板的鼠标选项里还原
-	BOOL iRet = SetSystemCursor(hCur[0], OCR_NORMAL);
-	iRet &= SetSystemCursor(hCur[1], OCR_HAND);
-	iRet &= SetSystemCursor(hCur[2], OCR_IBEAM);
-	if (!iRet) {
-		MessageBoxA(NULL, "光标还原失败！", "错误", MB_OK | MB_ICONERROR);
-		return false;
-	}
-	return true;
-}
-
 
 void CWorkHelperDlg::OnBnClickedOk()
 {
@@ -436,8 +440,12 @@ LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
 	CString msgfile;
 	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
 
-	UnSetSelectMouse();
 	pComb->GetWindowTextW(msgfile);
+	if ((msgfile.IsEmpty()) || (hTarget == NULL)) {
+		MessageBox(L"控键错误，资源不足!", L"SB", MB_OK);
+		return LRESULT(NULL);
+	}
+
 	MessageBox(msgfile, L"OnControlKey", MB_OK);
 
 	CControlKey *pck = CControlKey::getInstance();
@@ -448,9 +456,6 @@ LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
 	}
 
 	::SetForegroundWindow(hTarget);
-//	::SendMessage(hTarget, WM_KEYDOWN, 'A', NULL);
-//	::SendMessage(hTarget, WM_CHAR, 'a', NULL);
-//	::SendMessage(hTarget, WM_KEYUP, 'A', NULL);
 	//多次控键怎么办
 //	if(m_pthread1 == NULL)
 //		m_pthread1 = AfxBeginThread(pck->LoadMsgBuffer, this, THREAD_PRIORITY_NORMAL, 0, 0);
@@ -476,7 +481,8 @@ void fun(void *) {
 			SetWindowText(hEdit, arr);
 			CWorkHelperDlg::hTarget = target;
 			Sleep(200);
-			::SendMessage(hMain, WM_CTLKEY, NULL, NULL);
+			UnSetSelectMouse();
+//			::SendMessage(CWorkHelperDlg::hMain, WM_CTLKEY, NULL, NULL);
 			break;
 		}
 	}
@@ -495,11 +501,7 @@ void CWorkHelperDlg::OnBnClickedStart1()
 	}
 	m_Stat = HelperStat::STAT_CONTROL;
 
-	SetSelectMouse();
-
-	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
-
-	//	::SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)hCur);
+	::SendMessage(CWorkHelperDlg::hMain, WM_CTLKEY, NULL, NULL);
 }
 
 
@@ -538,4 +540,22 @@ void CWorkHelperDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		MessageBox(L"You are Click Down", L"Attion", MB_OK);
 	}
 	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CWorkHelperDlg::OnScanFile()
+{
+	// TODO: 在此添加命令处理程序代码
+	MessageBox(L"You are Scaning File", L"Attion", MB_OK);
+}
+
+
+void CWorkHelperDlg::OnPointToHwnd()
+{
+	// TODO: 在此添加命令处理程序代码
+//	MessageBox(L"You are Pointing Hwnd", L"Attion", MB_OK);
+
+	SetSelectMouse();
+
+	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
 }

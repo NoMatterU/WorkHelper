@@ -8,6 +8,7 @@ MsgBuf CControlKey::data2{ 0 };
 MsgBuf *CControlKey::spaDat = NULL;
 BOOL CControlKey::iFinish = false;
 BOOL iCheck = true, rdyLoad = false;
+//HWND CWorkHelperDlg::hMain;
 
 UINT __cdecl CControlKey::LoadMsgBuffer(LPVOID lparam)
 {
@@ -68,6 +69,6 @@ UINT __cdecl CControlKey::varControlKey(LPVOID lparam)
 		}
 	}
 end:
-	MessageBoxA(NULL, "控键结束!", "提示", MB_OK | MB_ICONINFORMATION);
+	MessageBoxA(CWorkHelperDlg::hMain, "控键结束!", "提示", MB_OK | MB_ICONINFORMATION);
 	return 0;
 }

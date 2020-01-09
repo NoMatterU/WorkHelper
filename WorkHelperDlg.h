@@ -43,8 +43,8 @@ protected:
 		BOOL sFlag = GetKeyState(VK_SHIFT) & 0x8000;
 		return cFlag ^ sFlag;
 	};
-	BOOL SetSelectMouse();
-	BOOL UnSetSelectMouse();
+//	static BOOL SetSelectMouse();
+//	static BOOL UnSetSelectMouse();
 
 	BOOL CheckStat(HelperStat stat) {
 		return true;
@@ -55,6 +55,7 @@ private:
 	HelperStat m_Stat = HelperStat::STAT_SPACE;
 public:
 	static HWND hTarget;
+	static HWND hMain;
 	static HDC hDC;
 
 	afx_msg void OnBnClickedOk();
@@ -68,4 +69,6 @@ public:
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 	afx_msg void OnBnClickedFinish1();
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnScanFile();
+	afx_msg void OnPointToHwnd();
 };

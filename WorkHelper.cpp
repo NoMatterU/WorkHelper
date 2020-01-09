@@ -10,7 +10,6 @@
 #define new DEBUG_NEW
 #endif
 
-
 // CWorkHelperApp
 
 BEGIN_MESSAGE_MAP(CWorkHelperApp, CWinApp)

@@ -58,7 +58,8 @@ public:
 		return  count / sizeof(MyMSG);
 	};
 private:
-	CControlKey() {};
+	CControlKey() {
+	};
 
 	~CControlKey() {
 		if(m_isOpen) msgFile.Close();
@@ -67,6 +68,7 @@ private:
 	CFile msgFile;
 	BOOL m_isOpen = false;
 
+//	static HWND hMain;
 	//标志是否结束
 	static BOOL iFinish;
 
