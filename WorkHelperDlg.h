@@ -45,9 +45,14 @@ protected:
 	};
 	BOOL SetSelectMouse();
 	BOOL UnSetSelectMouse();
+
+	BOOL CheckStat(HelperStat stat) {
+		return true;
+	}
 private:
 	CWinThread *m_pthread1 = NULL;
 	CWinThread *m_pthread2 = NULL; 
+	HelperStat m_Stat = HelperStat::STAT_SPACE;
 public:
 	static HWND hTarget;
 	static HDC hDC;
@@ -62,4 +67,5 @@ public:
 	afx_msg void OnBnClickedStart1();
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 	afx_msg void OnBnClickedFinish1();
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };

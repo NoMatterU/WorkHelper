@@ -66,3 +66,9 @@ struct MyMSG {
 	LPARAM lParam;
 };
 #endif
+
+enum class HelperStat{
+	STAT_SPACE = 0,
+	STAT_LISTEN,
+	STAT_CONTROL,
+};

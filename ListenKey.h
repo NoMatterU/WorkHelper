@@ -10,7 +10,7 @@ public:
 
 	DWORD GetIntervalTime(DWORD nowTime);
 
-	//add 文字居中显示
+	//add 文字居中显示 Dis
 	void TextOutStatic(const char *text1, const char *text2 = NULL, const char *text3 = NULL);
 
 	void ExitHook();
@@ -25,7 +25,7 @@ public:
 
 	void PushMsgBuf(DWORD nowTime, UINT message, WPARAM wParam, LPARAM lParam);
 
-	void KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp);
+	BOOL KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp);
 
 private:
 	CListenKey() {

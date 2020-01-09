@@ -52,6 +52,8 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_START1, &CWorkHelperDlg::OnBnClickedStart1)
 	ON_WM_SETCURSOR()
 	ON_BN_CLICKED(IDC_FINISH1, &CWorkHelperDlg::OnBnClickedFinish1)
+
+	ON_WM_VSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -138,11 +140,11 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 	char text[30]{ "无法识别按键" }, interval[30]{ 0 };
 	CListenKey &listen = CListenKey::getInstance();
 
-	//增加一个过滤按键功能
+	//增加一个过滤按键功能 Done
 	if (HC_ACTION == nCode) {
 
 		KBDLLHOOKSTRUCT *  keyNum = (KBDLLHOOKSTRUCT *)lParam;
-		
+
 		if (!listen.CheckTime(keyNum->time)) {
 			MessageBoxA(theApp.GetMainWnd()->GetSafeHwnd(), "记录超时，此次失效!", "ERROR", MB_OK | MB_ICONERROR);
 //			SaveFile.clear();
@@ -158,21 +160,25 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 
 		if ((wParam == WM_KEYDOWN)) {		//有键按下
 			DWORD Code = keyNum->vkCode;
-			listen.KeyStatInfo(keyNum->vkCode, text, false);
-			sprintf_s(interval, "消息间隔时间 : %d ms", listen.GetIntervalTime(keyNum->time));
-			listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, Code, lParam);
-			if ((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z') ||
-					(keyNum->vkCode >= '0' && keyNum->vkCode <= '9')
-				) {
-				if (!IsHCase()) Code = tolower(keyNum->vkCode);
-				listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, Code, lParam);
+			//返回真假来过滤键消息
+			if (listen.KeyStatInfo(keyNum->vkCode, text, false)) {
+				sprintf_s(interval, "消息间隔时间 : %d ms", listen.GetIntervalTime(keyNum->time));
+				listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, Code, lParam);
+				//额外的WM_CHAR消息
+				if ((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z') ||
+						(keyNum->vkCode >= '0' && keyNum->vkCode <= '9')
+					) {
+					if (!IsHCase()) Code = tolower(keyNum->vkCode);
+					listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, Code, lParam);
+				}
 			}
 			listen.TextOutStatic(NULL, text, interval);
 		}
 		else if (wParam == WM_KEYUP) {		//有键松开
-			listen.KeyStatInfo(keyNum->vkCode, text, true);
-			listen.PushMsgBuf(keyNum->time, WM_KEYUP, keyNum->vkCode, lParam);
-			listen.TextOutStatic(NULL, text);
+			if (listen.KeyStatInfo(keyNum->vkCode, text, true)) {
+				listen.PushMsgBuf(keyNum->time, WM_KEYUP, keyNum->vkCode, lParam);
+				listen.TextOutStatic(NULL, text);
+			}
 		}
 //		else if (wParam == WM_CHAR) {
 //			MessageBoxA(NULL, "CNMB", "SB", MB_OK);
@@ -283,15 +289,22 @@ void CWorkHelperDlg::FindMsgFile()
 		HANDLE hFile = FindFirstFile(strTemp, &findData);
 		while (hFile != INVALID_HANDLE_VALUE)
 		{
-			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)//如果是目录
+			if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))//如果不是目录
 			{
-				if (findData.cFileName[0] != _T('.'))//排除.和..文件夹
+		//		if (findData.cFileName[0] != _T('.'))//排除.和..文件夹
+		//			pCombo->AddString(findData.cFileName);
+				CString temp = findData.cFileName;
+//				OutputDebugString(findData.cFileName);
+//				OutputDebugString(L"\0\n");
+				temp = temp.Right(temp.GetLength() - temp.ReverseFind('.') - 1);
+				if (!temp.CompareNoCase(L"msg"))//排除.和..文件夹
 					pCombo->AddString(findData.cFileName);
 			}
 
 			if (!FindNextFile(hFile, &findData)) break;
 
 		}
+		FindClose(hFile);
 	}
 }
 
@@ -343,6 +356,16 @@ void CWorkHelperDlg::OnBnClickedCancel()
 void CWorkHelperDlg::OnBnClickedStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
+	if (m_Stat == HelperStat::STAT_LISTEN) {
+		MessageBox(L"当前正在监听状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
+		return;
+	}
+	else if (m_Stat == HelperStat::STAT_CONTROL) {
+		MessageBox(L"当前正在控键状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
+		return;
+	}
+	m_Stat = HelperStat::STAT_LISTEN;
+
 	OpnFileDlg dlg(this->GetSafeHwnd());
 
 //	INT_PTR nResponse = dlg.DoModal();
@@ -382,6 +405,15 @@ void CWorkHelperDlg::OnBnClickedStart()
 void CWorkHelperDlg::OnBnClickedFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
+	if (m_Stat != HelperStat::STAT_LISTEN) {
+#ifdef _DEBUG
+		MessageBox(L"CNMB", L"SB", MB_OK);
+#endif
+		return;
+	}
+
+	m_Stat = HelperStat::STAT_SPACE;
+
 	if(!::UnhookWindowsHookEx(hHook)) return;
 	if (!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK | MB_ICONERROR);
 
@@ -453,9 +485,16 @@ void fun(void *) {
 void CWorkHelperDlg::OnBnClickedStart1()
 {
 	// TODO: 在此添加控件通知处理程序代码
-//	HCURSOR hCur = CopyCursor((HCURSOR)LoadImage(NULL, TEXT("C:\\Windows\\Cursors\\aero_ew_l.cur"), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
-//	SetCursor(hCur);
-//	HCURSOR hCur = GetCursor();
+	if (m_Stat == HelperStat::STAT_LISTEN) {
+		MessageBox(L"当前正在监听状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
+		return;
+	}
+	else if (m_Stat == HelperStat::STAT_CONTROL) {
+		MessageBox(L"当前正在控键状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
+		return;
+	}
+	m_Stat = HelperStat::STAT_CONTROL;
+
 	SetSelectMouse();
 
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
@@ -476,7 +515,27 @@ BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 void CWorkHelperDlg::OnBnClickedFinish1()
 {
 	// TODO: 在此添加控件通知处理程序代码
-//	std::thread t(fun);
-//	t.join();
-//	t.join();
+	if (m_Stat != HelperStat::STAT_CONTROL) {
+#ifdef _DEBUG
+		MessageBox(L"CNMB", L"SB", MB_OK);
+#endif
+		return;
+	}
+	m_Stat = HelperStat::STAT_SPACE;
+	//	std::thread t(fun);
+	//	t.join();
+	//	t.join();
+}
+
+
+void CWorkHelperDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	if (nSBCode == SB_LINEUP) {
+		MessageBox(L"You are Click Up", L"Attion", MB_OK);
+	}
+	else if (nSBCode == SB_LINEDOWN) {
+		MessageBox(L"You are Click Down", L"Attion", MB_OK);
+	}
+	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
 }

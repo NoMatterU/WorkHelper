@@ -53,7 +53,10 @@ public:
 
 	BOOL IsFileOpen() { return m_isOpen; };
 //	BOOL IsFileEof() { return m_FileLen > msgFile.GetPosition() };
-	UINT ReadFile() { return msgFile.Read(spaDat->data, MAX_MSG_BUFFER); };
+	UINT ReadFile() { 
+		const int count = msgFile.Read(spaDat->data, MAX_MSG_BUFFER * sizeof(MyMSG));
+		return  count / sizeof(MyMSG);
+	};
 private:
 	CControlKey() {};
 

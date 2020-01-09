@@ -80,29 +80,37 @@ void CListenKey::PushMsgBuf(DWORD nowTime, UINT message, WPARAM wParam, LPARAM l
 //	m_lastTime = nowTime;
 }
 
-void CListenKey::KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {
-	if (vkCode >= 'A' && vkCode <= 'Z') {
+BOOL CListenKey::KeyStatInfo(DWORD vkCode, char *outstr, bool iKeyUp) {
+	//增加一个空格
+	if ((vkCode >= 'A' && vkCode <= 'Z') || (vkCode >= '0' && vkCode <= '9')) {
 		if (iKeyUp) sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键弹起   ", vkCode);
 		else sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键按下   ", vkCode);
+		return true;
 	}
 	else if (vkCode >= VK_NUMPAD0 && vkCode <= VK_NUMPAD9) {
 		if (iKeyUp) sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键弹起   ", 48 + vkCode - 96);
 		else sprintf_s(outstr, MAX_TEXT_SIZE, "   当前 %c 键按下   ", 48 + vkCode - 96);
+		return true;
 	}
 	else if (vkCode == VK_LEFT) {
 		if (iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键← 键弹起");
 		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键← 键按下");
+		return true;
 	}
 	else if (vkCode == VK_UP) {
 		if (iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↑ 键弹起");
 		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↑ 键按下");
+		return true;
 	}
 	else if (vkCode == VK_RIGHT) {
 		if (iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键→ 键弹起");
 		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键→ 键按下");
+		return true;
 	}
 	else if (vkCode == VK_DOWN) {
 		if (iKeyUp) strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↓ 键弹起");
 		else strcpy_s(outstr, MAX_TEXT_SIZE, "分向键↓ 键按下");
+		return true;
 	}
+	return false;
 }
