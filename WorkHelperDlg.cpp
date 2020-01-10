@@ -23,6 +23,7 @@ HWND hStatic = NULL;
 HCURSOR hCur[3] = { 0 };
 HWND hEdit = NULL;
 HHOOK hHook = NULL;
+HWND hChild = NULL;
 HWND CWorkHelperDlg::hMain = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
 HWND CWorkHelperDlg::hTarget = NULL;
@@ -44,14 +45,14 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CWorkHelperDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDCANCEL, &CWorkHelperDlg::OnBnClickedCancel)
 
-	ON_BN_CLICKED(IDC_START, &CWorkHelperDlg::OnBnClickedStart)
-	ON_BN_CLICKED(IDC_FINISH, &CWorkHelperDlg::OnBnClickedFinish)
-	ON_MESSAGE(WM_ENDHOOK, &CWorkHelperDlg::OnEndHook)
-	ON_MESSAGE(WM_CTLKEY, &CWorkHelperDlg::OnControlKey)
+	ON_BN_CLICKED(IDC_START, &CWorkHelperDlg::OnLisKeyStart)
+	ON_BN_CLICKED(IDC_FINISH, &CWorkHelperDlg::OnLisKeyFinish)
+	ON_MESSAGE(WM_ENDHOOK, &CWorkHelperDlg::OnShutHook)
+	ON_MESSAGE(WM_CTLEND, &CWorkHelperDlg::OnCtlKeyEnd)
 
-	ON_BN_CLICKED(IDC_START1, &CWorkHelperDlg::OnBnClickedStart1)
+	ON_BN_CLICKED(IDC_START1, &CWorkHelperDlg::OnCtlKeyStart)
 	ON_WM_SETCURSOR()
-	ON_BN_CLICKED(IDC_FINISH1, &CWorkHelperDlg::OnBnClickedFinish1)
+	ON_BN_CLICKED(IDC_FINISH1, &CWorkHelperDlg::OnCtlKeyFinish)
 
 	ON_WM_VSCROLL()
 	ON_COMMAND(ID_32771, &CWorkHelperDlg::OnScanFile)
@@ -298,10 +299,8 @@ void CWorkHelperDlg::FindMsgFile()
 		//		if (findData.cFileName[0] != _T('.'))//排除.和..文件夹
 		//			pCombo->AddString(findData.cFileName);
 				CString temp = findData.cFileName;
-//				OutputDebugString(findData.cFileName);
-//				OutputDebugString(L"\0\n");
 				temp = temp.Right(temp.GetLength() - temp.ReverseFind('.') - 1);
-				if (!temp.CompareNoCase(L"msg"))//排除.和..文件夹
+				if (!temp.CompareNoCase(L"msg"))
 					pCombo->AddString(findData.cFileName);
 			}
 
@@ -357,7 +356,7 @@ void CWorkHelperDlg::OnBnClickedCancel()
 }
 
 
-void CWorkHelperDlg::OnBnClickedStart()
+void CWorkHelperDlg::OnLisKeyStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	if (m_Stat == HelperStat::STAT_LISTEN) {
@@ -368,7 +367,6 @@ void CWorkHelperDlg::OnBnClickedStart()
 		MessageBox(L"当前正在控键状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
 		return;
 	}
-	m_Stat = HelperStat::STAT_LISTEN;
 
 	OpnFileDlg dlg(this->GetSafeHwnd());
 
@@ -384,6 +382,8 @@ void CWorkHelperDlg::OnBnClickedStart()
 		);
 	}
 	else return;
+
+	m_Stat = HelperStat::STAT_LISTEN;
 //	KDialog dlg(theApp.m_hInstance, this->GetSafeHwnd());
 //	CMyDlg dlg;
 //	CString result;
@@ -398,15 +398,16 @@ void CWorkHelperDlg::OnBnClickedStart()
 		WCHAR text[30]{ 0 };
 		wsprintf(text, L"键盘监听失败！错误码 : %d", GetLastError());
 		MessageBoxW(text, TEXT("ERROE"), MB_OK | MB_ICONERROR);
+		m_Stat = HelperStat::STAT_SPACE;
 		return;
 	}
 
-	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 	this->SetFocus();
+	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 }
 
 
-void CWorkHelperDlg::OnBnClickedFinish()
+void CWorkHelperDlg::OnLisKeyFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	if (m_Stat != HelperStat::STAT_LISTEN) {
@@ -428,44 +429,17 @@ void CWorkHelperDlg::OnBnClickedFinish()
 }
 
 //失败消息引发的退出程序
-LRESULT CWorkHelperDlg::OnEndHook(WPARAM wParam, LPARAM lParam) {
+LRESULT CWorkHelperDlg::OnShutHook(WPARAM wParam, LPARAM lParam) {
 	CListenKey::getInstance().ExitHook();
 	::UnhookWindowsHookEx(hHook);
 	CListenKey::getInstance().TextOutStatic(" ", " ", " ");
 	return LRESULT(NULL);
 }
 
-LRESULT CWorkHelperDlg::OnControlKey(WPARAM wParam, LPARAM lParam)
+LRESULT CWorkHelperDlg::OnCtlKeyEnd(WPARAM wParam, LPARAM lParam)
 {
-	CString msgfile;
-	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
-
-	pComb->GetWindowTextW(msgfile);
-	if ((msgfile.IsEmpty()) || (hTarget == NULL)) {
-		MessageBox(L"控键错误，资源不足!", L"SB", MB_OK);
-		return LRESULT(NULL);
-	}
-
-	MessageBox(msgfile, L"OnControlKey", MB_OK);
-
-	CControlKey *pck = CControlKey::getInstance();
-
-	if (!pck->InitFile(L"./Journal.txt")) {
-		MessageBox(L"CNMB", L"SB", MB_OK);
-		return LRESULT(NULL);
-	}
-
-	::SetForegroundWindow(hTarget);
-	//多次控键怎么办
-//	if(m_pthread1 == NULL)
-//		m_pthread1 = AfxBeginThread(pck->LoadMsgBuffer, this, THREAD_PRIORITY_NORMAL, 0, 0);
-
-//	if (m_pthread2 == NULL)
-		m_pthread2 = AfxBeginThread(pck->varControlKey, this, THREAD_PRIORITY_NORMAL, 0, 0);
-/*
-	SuspendThread(m_pthread2->m_hThread); //挂起第二个线程。“暂停”
-	ResumeThread(m_pthread2->m_hThread); //释放第二个线程。”播放“
-*/
+	m_Stat = HelperStat::STAT_SPACE;
+	MessageBoxA(this->GetSafeHwnd(), "控键结束!", "提示", MB_OK | MB_ICONINFORMATION);
 	return LRESULT(NULL);
 }
 
@@ -488,7 +462,7 @@ void fun(void *) {
 	}
 }
 
-void CWorkHelperDlg::OnBnClickedStart1()
+void CWorkHelperDlg::OnCtlKeyStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	if (m_Stat == HelperStat::STAT_LISTEN) {
@@ -499,9 +473,36 @@ void CWorkHelperDlg::OnBnClickedStart1()
 		MessageBox(L"当前正在控键状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
 		return;
 	}
-	m_Stat = HelperStat::STAT_CONTROL;
 
-	::SendMessage(CWorkHelperDlg::hMain, WM_CTLKEY, NULL, NULL);
+	CString msgfile;
+	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
+
+	pComb->GetWindowTextW(msgfile);
+	if ((msgfile.IsEmpty()) || (hTarget == NULL)) {
+		MessageBox(L"控键错误，资源不足!", L"SB", MB_OK);
+		return;
+	}
+	m_Stat = HelperStat::STAT_CONTROL;
+//	MessageBox(msgfile, L"OnControlKey", MB_OK);
+
+	CControlKey *pck = CControlKey::getInstance();
+
+	if (!pck->InitFile(L"./Journal.txt")) {
+		MessageBox(L"CNMB", L"SB", MB_OK);
+		return;
+	}
+
+	::SetForegroundWindow(hTarget);
+	//多次控键怎么办
+	//	if(m_pthread1 == NULL)
+	m_pthread1 = AfxBeginThread(pck->LoadMsgBuffer, this, THREAD_PRIORITY_NORMAL, 0, 0);
+
+	//	if (m_pthread2 == NULL)
+	m_pthread2 = AfxBeginThread(pck->varControlKey, this, THREAD_PRIORITY_NORMAL, 0, 0);
+	/*
+	SuspendThread(m_pthread2->m_hThread); //挂起第二个线程。“暂停”
+	ResumeThread(m_pthread2->m_hThread); //释放第二个线程。”播放“
+	*/
 }
 
 
@@ -514,7 +515,7 @@ BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 }
 
 
-void CWorkHelperDlg::OnBnClickedFinish1()
+void CWorkHelperDlg::OnCtlKeyFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	if (m_Stat != HelperStat::STAT_CONTROL) {
@@ -523,21 +524,37 @@ void CWorkHelperDlg::OnBnClickedFinish1()
 #endif
 		return;
 	}
-	m_Stat = HelperStat::STAT_SPACE;
-	//	std::thread t(fun);
-	//	t.join();
-	//	t.join();
+
+	CControlKey::getInstance()->StopCtlKey();
+//可以不用设置空闲状态
+//	m_Stat = HelperStat::STAT_SPACE;
 }
 
 
 void CWorkHelperDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	if (nSBCode == SB_LINEUP) {
-		MessageBox(L"You are Click Up", L"Attion", MB_OK);
-	}
-	else if (nSBCode == SB_LINEDOWN) {
-		MessageBox(L"You are Click Down", L"Attion", MB_OK);
+	WCHAR arr[60]{ 0 }, title[30]{ 0 };
+	if (hTarget) {
+		if (nSBCode == SB_LINEUP) {
+			HWND hTemp = ::GetParent(hTarget);
+			if (hTemp) {
+				hTarget = hTemp;
+				::GetWindowText(hTarget, title, 29);
+				wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hTarget);
+				::SetWindowText(hEdit, arr);
+	//			MessageBox(L"You are Click Up", L"Attion", MB_OK);
+			}
+		}
+		else if (nSBCode == SB_LINEDOWN) {
+			if(hChild == NULL) hChild = ::GetWindow(hTarget, GW_CHILD);
+			else hChild = ::GetNextWindow(hChild, GW_HWNDNEXT);
+			::GetWindowText(hChild, title, 29);
+			wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hChild);
+			::SetWindowText(hEdit, arr);
+			hTarget = hChild;
+			//MessageBox(L"You are Click Down", L"Attion", MB_OK);
+		}
 	}
 	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
 }
@@ -546,7 +563,11 @@ void CWorkHelperDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 void CWorkHelperDlg::OnScanFile()
 {
 	// TODO: 在此添加命令处理程序代码
-	MessageBox(L"You are Scaning File", L"Attion", MB_OK);
+//	MessageBox(L"You are Scaning File", L"Attion", MB_OK);
+	CComboBox *pComb = (CComboBox *)GetDlgItem(IDC_COMBO);
+	int num = pComb->GetCount();
+	for (int i = 0; i < num; i++) pComb->DeleteString(0);
+	FindMsgFile();
 }
 
 

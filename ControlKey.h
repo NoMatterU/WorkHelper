@@ -35,6 +35,9 @@ public:
 			msgFile.Close();
 			memset(&data1, 0, sizeof(MsgBuf));
 			memset(&data2, 0, sizeof(MsgBuf));
+			spaDat = &data1;
+			iFinish = false;
+			iCtlKey = true;
 		}
 		m_isOpen = msgFile.Open(filename, CFile::modeRead | CFile::typeBinary);
 		if (!m_isOpen) return false;
@@ -46,29 +49,32 @@ public:
 			iFinish = true;
 		}
 		return true;
-	};
+	}
 
 	static UINT __cdecl LoadMsgBuffer(LPVOID lparam);
 	static UINT __cdecl varControlKey(LPVOID lparam);
 
-	BOOL IsFileOpen() { return m_isOpen; };
-//	BOOL IsFileEof() { return m_FileLen > msgFile.GetPosition() };
+	BOOL IsFileOpen() { return m_isOpen; }
+
+	VOID StopCtlKey() { iCtlKey = false; }
+
 	UINT ReadFile() { 
 		const int count = msgFile.Read(spaDat->data, MAX_MSG_BUFFER * sizeof(MyMSG));
 		return  count / sizeof(MyMSG);
-	};
+	}
 private:
 	CControlKey() {
-	};
+		iCtlKey = true;
+	}
 
 	~CControlKey() {
 		if(m_isOpen) msgFile.Close();
-	};
+	}
 
 	CFile msgFile;
 	BOOL m_isOpen = false;
 
-//	static HWND hMain;
+	static BOOL iCtlKey;
 	//标志是否结束
 	static BOOL iFinish;
 

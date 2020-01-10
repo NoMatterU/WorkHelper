@@ -156,6 +156,7 @@ INT_PTR OpnFileDlg::DoModal() {
 		DispatchMessage(&msg);      //将消息传递给回调函数处理
 	}
 
+	Sleep(100);
 	SetForegroundWindow(m_hParent);
 	return retModel;
 }

@@ -29,6 +29,7 @@ public:
 
 private:
 	CListenKey() {
+		//每次文件打开清空文件内容
 		m_saveFile.open("Journal.txt", ios_base::in | ios_base::out);
 	};
 

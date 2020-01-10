@@ -60,14 +60,14 @@ public:
 
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCancel();
-	afx_msg void OnBnClickedStart();
-	afx_msg void OnBnClickedFinish();
-	afx_msg LRESULT OnEndHook(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnControlKey(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnLisKeyStart();
+	afx_msg void OnLisKeyFinish();
+	afx_msg LRESULT OnShutHook(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCtlKeyEnd(WPARAM wParam, LPARAM lParam);
 
-	afx_msg void OnBnClickedStart1();
+	afx_msg void OnCtlKeyStart();
+	afx_msg void OnCtlKeyFinish();
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
-	afx_msg void OnBnClickedFinish1();
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnScanFile();
 	afx_msg void OnPointToHwnd();
