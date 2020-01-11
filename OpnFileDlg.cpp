@@ -20,6 +20,7 @@ INT_PTR retModel = NULL;
 LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam)
 {
 	HDC	hdc = NULL;
+	HBRUSH hBrush = NULL;
 	PAINTSTRUCT	ps{ 0 };
 	RECT rect{ 0 };
 
@@ -32,6 +33,7 @@ LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM
 
 //		cxChar = LOWORD(GetDialogBaseUnits());    //获得窗口中内定字体字元宽度（低字组）
 //		cyChar = HIWORD(GetDialogBaseUnits());    //或得窗口中内定字体字元高度（高字组）
+		SendMessage(hwnd, WM_SETICON, (WPARAM)TRUE, (LPARAM)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME)));//添加窗口小图标
 		EnableWindow(m_hParent, false);
 		return 0;
 
@@ -60,8 +62,8 @@ LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM
 	case WM_PAINT:             //处理窗口产生无效区域时发来的消息
 		GetClientRect(hwnd, &rect);
 		hdc = BeginPaint(hwnd, &ps);
-//		TextOut(hdc, rect.left + cxChar * 12, 95, TEXT("UserName:"), lstrlen(TEXT("UserName:")));
-//		TextOut(hdc, rect.left + cxChar * 12, 145, TEXT("Password:"), lstrlen(TEXT("Password:")));
+		hBrush = CreateSolidBrush(RGB(240, 240, 240));
+		FillRect(hdc, &rect, hBrush);
 		EndPaint(hwnd, &ps);
 		return 0;
 
@@ -73,8 +75,26 @@ LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM
 	case WM_NCACTIVATE:
 		if (wParam == 0) iLoseForce = true;
 		break;
-	}
 
+/*	case WM_CTLCOLORBTN://设置按钮的颜色
+
+		if ((HWND)lParam == GetDlgItem(m_hWnd, ID_OKBTN))
+		{
+			HWND hbn = (HWND)lParam;
+			HDC hdc = (HDC)wParam;
+			RECT rc;
+			TCHAR text[64];
+
+			GetWindowText(hbn, text, 63);
+			GetClientRect(hbn, &rc);
+			SetTextColor(hdc, RGB(40, 40, 40));//设置按钮上文本的颜色
+			SetBkMode(hdc, TRANSPARENT);
+			DrawText(hdc, text, _tcslen(text), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			return (INT_PTR)CreateSolidBrush(RGB(240, 240, 240));//返回画刷设置按钮的背景色
+		}
+		break;
+*/	}
 	return DefWindowProc(hwnd, umsg, wParam, lParam);
 }
 
@@ -85,10 +105,12 @@ bool OpnFileDlg::CreateWindows()
 	RECT rect{ 0 };
 	GetWindowRect(m_hParent, &rect);
 
+	int ParHeight = rect.bottom - rect.top;
+	int ParWidth = rect.right - rect.left;
 	/* 创建主窗口 */
 	m_hWnd = CreateWindow(m_szAppName, TEXT("保存消息文件"),
 		WS_EX_LAYERED | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-		rect.left + 100, rect.top + 20,
+		rect.left + (ParWidth - DEFAULTWIDTH) / 2, rect.top + (ParHeight - DEFAULTHEIGHT) / 2,
 		m_cWidth, m_cHenght,
 		m_hParent, NULL, NULL, NULL);
 	if (!m_hWnd) return false;
@@ -99,7 +121,7 @@ bool OpnFileDlg::CreateWindows()
 		DEFAULTWIDTH / 2 - 200 / 3, DEFAULTHEIGHT / 4 - 30 / 2, 200, 30,
 		m_hWnd, (HMENU)ID_EDIT, NULL, NULL);
 
-	/* 创建确定按钮 */
+	/* 创建确定按钮 | BS_OWNERDRAW */
 	m_hChild[1] = CreateWindow(TEXT("BUTTON"), TEXT("确定"),
 		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
 		DEFAULTWIDTH / 4 - 60 / 2, (DEFAULTHEIGHT * 2) / 3 - 30 / 2, 60, 30,
@@ -156,7 +178,7 @@ INT_PTR OpnFileDlg::DoModal() {
 		DispatchMessage(&msg);      //将消息传递给回调函数处理
 	}
 
-	Sleep(100);
+	Sleep(90);
 	SetForegroundWindow(m_hParent);
 	return retModel;
 }

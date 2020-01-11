@@ -15,18 +15,15 @@
 #define new DEBUG_NEW
 #endif
 
-// CWorkHelperDlg dialog
-//HWND CWorkHelperDlg::m_hWnd = NULL;
-//HCURSOR CWorkHelperDlg::m_hArrow = NULL;
-//HHOOK CWorkHelperDlg::hHook = NULL;
 HWND hStatic = NULL;
 HCURSOR hCur[3] = { 0 };
 HWND hEdit = NULL;
 HHOOK hHook = NULL;
-HWND hChild = NULL;
+HWND hFstChild = NULL;
 HWND CWorkHelperDlg::hMain = NULL;
 HDC CWorkHelperDlg::hDC = NULL;
 HWND CWorkHelperDlg::hTarget = NULL;
+BOOL iFstFind = true;
 
 CWorkHelperDlg::CWorkHelperDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_WORKHELPER_DIALOG, pParent)
@@ -55,8 +52,11 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_FINISH1, &CWorkHelperDlg::OnCtlKeyFinish)
 
 	ON_WM_VSCROLL()
-	ON_COMMAND(ID_32771, &CWorkHelperDlg::OnScanFile)
-	ON_COMMAND(ID_32772, &CWorkHelperDlg::OnPointToHwnd)
+	ON_BN_CLICKED(IDC_SUSPEND, &CWorkHelperDlg::OnLisKeySuspend)
+	ON_BN_CLICKED(IDC_SUSPEND1, &CWorkHelperDlg::OnCtlKeySuspend)
+	ON_COMMAND(ID_SCAN, &CWorkHelperDlg::OnScanFile)
+	ON_COMMAND(ID_POINT, &CWorkHelperDlg::OnPointToHwnd)
+	ON_COMMAND(ID_HELP, &CWorkHelperDlg::OnHelp)
 END_MESSAGE_MAP()
 
 
@@ -77,7 +77,7 @@ BOOL CWorkHelperDlg::OnInitDialog()
 	hMain = this->GetSafeHwnd();
 	hDC = ::GetDC(hStatic);
 
-	if (!hDC || !m_hWnd) {
+	if (!(hDC && m_hWnd)) {
 		MessageBox(L"初始化程序失败", L"ERROR", MB_OK | MB_ICONERROR);
 		exit(-1);
 	}
@@ -359,11 +359,11 @@ void CWorkHelperDlg::OnBnClickedCancel()
 void CWorkHelperDlg::OnLisKeyStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if (m_Stat == HelperStat::STAT_LISTEN) {
+	if ((m_Stat == HelperStat::STAT_LISTENING) || (m_Stat == HelperStat::STAT_LISSUSPEND)) {
 		MessageBox(L"当前正在监听状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
 		return;
 	}
-	else if (m_Stat == HelperStat::STAT_CONTROL) {
+	else if ((m_Stat == HelperStat::STAT_CONTROLING) || (m_Stat == HelperStat::STAT_CTLSUSPEND)) {
 		MessageBox(L"当前正在控键状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
 		return;
 	}
@@ -383,16 +383,6 @@ void CWorkHelperDlg::OnLisKeyStart()
 	}
 	else return;
 
-	m_Stat = HelperStat::STAT_LISTEN;
-//	KDialog dlg(theApp.m_hInstance, this->GetSafeHwnd());
-//	CMyDlg dlg;
-//	CString result;
-//	dlg.CreateModeDlg(_T("123"), CRect(0, 0, 100, 100), TRUE, this);
-//	MessageBox(dlg.GetFileName(), L"CNMB", MB_OK);
-//	if (nResponse == IDOK) MessageBox(L"ASDA", L"rewrew", MB_OK);
-//	else if (nResponse == IDCANCEL) MessageBox(L"BDSFS", L"rewrew", MB_OK);
-//	else if (nResponse == -1) MessageBox(L"SHFD", L"rewrew", MB_OK);
-
 	if (hHook == NULL)
 	{
 		WCHAR text[30]{ 0 };
@@ -402,30 +392,34 @@ void CWorkHelperDlg::OnLisKeyStart()
 		return;
 	}
 
+	m_Stat = HelperStat::STAT_LISTENING;
+
 	this->SetFocus();
-	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
+	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...", " ", " ");
 }
 
 
 void CWorkHelperDlg::OnLisKeyFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if (m_Stat != HelperStat::STAT_LISTEN) {
+	if ((m_Stat == HelperStat::STAT_LISTENING) 
+		|| (m_Stat == HelperStat::STAT_LISSUSPEND)) {
+
+		if(m_Stat == HelperStat::STAT_LISTENING) 
+			if(!::UnhookWindowsHookEx(hHook)) return;
+
+		m_Stat = HelperStat::STAT_SPACE;
+		if (!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK | MB_ICONERROR);
+
+		CListenKey::getInstance().ExitHook();
+
+		CListenKey::getInstance().TextOutStatic("当前已结束监听状态", " ", " ");
+		this->SetFocus();
+		return;
+	}
 #ifdef _DEBUG
 		MessageBox(L"CNMB", L"SB", MB_OK);
 #endif
-		return;
-	}
-
-	m_Stat = HelperStat::STAT_SPACE;
-
-	if(!::UnhookWindowsHookEx(hHook)) return;
-	if (!CListenKey::getInstance().SaveMsg2File()) MessageBox(L"保存记录文件失败", L"ERROR", MB_OK | MB_ICONERROR);
-
-	CListenKey::getInstance().ExitHook();
-
-	CListenKey::getInstance().TextOutStatic("当前未在监听状态", " ", " ");
-	this->SetFocus();
 }
 
 //失败消息引发的退出程序
@@ -439,6 +433,7 @@ LRESULT CWorkHelperDlg::OnShutHook(WPARAM wParam, LPARAM lParam) {
 LRESULT CWorkHelperDlg::OnCtlKeyEnd(WPARAM wParam, LPARAM lParam)
 {
 	m_Stat = HelperStat::STAT_SPACE;
+	CListenKey::getInstance().TextOutStatic("当前已结束控键状态");
 	MessageBoxA(this->GetSafeHwnd(), "控键结束!", "提示", MB_OK | MB_ICONINFORMATION);
 	return LRESULT(NULL);
 }
@@ -465,11 +460,11 @@ void fun(void *) {
 void CWorkHelperDlg::OnCtlKeyStart()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if (m_Stat == HelperStat::STAT_LISTEN) {
+	if ((m_Stat == HelperStat::STAT_LISTENING) || (m_Stat == HelperStat::STAT_LISSUSPEND)) {
 		MessageBox(L"当前正在监听状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
 		return;
 	}
-	else if (m_Stat == HelperStat::STAT_CONTROL) {
+	else if ((m_Stat == HelperStat::STAT_CONTROLING) || (m_Stat == HelperStat::STAT_CTLSUSPEND)) {
 		MessageBox(L"当前正在控键状态中...", L"提示", MB_OK | MB_ICONINFORMATION);
 		return;
 	}
@@ -482,7 +477,7 @@ void CWorkHelperDlg::OnCtlKeyStart()
 		MessageBox(L"控键错误，资源不足!", L"SB", MB_OK);
 		return;
 	}
-	m_Stat = HelperStat::STAT_CONTROL;
+	m_Stat = HelperStat::STAT_CONTROLING;
 //	MessageBox(msgfile, L"OnControlKey", MB_OK);
 
 	CControlKey *pck = CControlKey::getInstance();
@@ -492,6 +487,7 @@ void CWorkHelperDlg::OnCtlKeyStart()
 		return;
 	}
 
+	CListenKey::getInstance().TextOutStatic("控键正在目标窗口中...", "", "");
 	::SetForegroundWindow(hTarget);
 	//多次控键怎么办
 	//	if(m_pthread1 == NULL)
@@ -499,10 +495,6 @@ void CWorkHelperDlg::OnCtlKeyStart()
 
 	//	if (m_pthread2 == NULL)
 	m_pthread2 = AfxBeginThread(pck->varControlKey, this, THREAD_PRIORITY_NORMAL, 0, 0);
-	/*
-	SuspendThread(m_pthread2->m_hThread); //挂起第二个线程。“暂停”
-	ResumeThread(m_pthread2->m_hThread); //释放第二个线程。”播放“
-	*/
 }
 
 
@@ -518,14 +510,14 @@ BOOL CWorkHelperDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 void CWorkHelperDlg::OnCtlKeyFinish()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if (m_Stat != HelperStat::STAT_CONTROL) {
-#ifdef _DEBUG
-		MessageBox(L"CNMB", L"SB", MB_OK);
-#endif
+	if ((m_Stat == HelperStat::STAT_CONTROLING) || (m_Stat == HelperStat::STAT_CONTROLING)) {
+		CControlKey::getInstance()->StopCtlKey();
 		return;
 	}
 
-	CControlKey::getInstance()->StopCtlKey();
+#ifdef _DEBUG
+		MessageBox(L"CNMB", L"SB", MB_OK);
+#endif
 //可以不用设置空闲状态
 //	m_Stat = HelperStat::STAT_SPACE;
 }
@@ -543,20 +535,33 @@ void CWorkHelperDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 				::GetWindowText(hTarget, title, 29);
 				wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hTarget);
 				::SetWindowText(hEdit, arr);
-	//			MessageBox(L"You are Click Up", L"Attion", MB_OK);
+				iFstFind = true;
+//				MessageBox(L"You are Click Up", L"Attion", MB_OK);
 			}
 		}
 		else if (nSBCode == SB_LINEDOWN) {
-			if(hChild == NULL) hChild = ::GetWindow(hTarget, GW_CHILD);
-			else hChild = ::GetNextWindow(hChild, GW_HWNDNEXT);
-			::GetWindowText(hChild, title, 29);
-			wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hChild);
+			if (iFstFind) {
+				hFstChild = ::GetWindow(hTarget, GW_CHILD);
+				if (hFstChild == NULL) return;
+				hTarget = hFstChild;
+				iFstFind = false;
+			}
+			else {
+				HWND hTemp = ::GetNextWindow(hTarget, GW_HWNDNEXT);
+				if (hTemp == NULL) {
+					hTarget = hFstChild;
+					MessageBox(L"已经是最后一个子窗口!", L"提示", MB_OK | MB_ICONINFORMATION);
+					return;
+				}
+				else hTarget = hTemp;
+			}
+			::GetWindowText(hTarget, title, 29);
+			wsprintfW(arr, L"标题: %s\t句柄: 0x%X", title, hTarget);
 			::SetWindowText(hEdit, arr);
-			hTarget = hChild;
-			//MessageBox(L"You are Click Down", L"Attion", MB_OK);
+//			MessageBox(L"You are Click Down", L"Attion", MB_OK);
 		}
 	}
-	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
+//	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
 }
 
 
@@ -579,4 +584,61 @@ void CWorkHelperDlg::OnPointToHwnd()
 	SetSelectMouse();
 
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)fun, 0, 0, 0);
+}
+
+
+void CWorkHelperDlg::OnLisKeySuspend()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (m_Stat == HelperStat::STAT_LISTENING) {
+		if (!::UnhookWindowsHookEx(hHook)) {
+			MessageBoxW(TEXT("暂停监听失败!"), TEXT("ERROE"), MB_OK | MB_ICONERROR);
+//			m_Stat = HelperStat::STAT_SPACE;
+			return;
+		}
+
+		CListenKey::getInstance().ExitHook();
+		CListenKey::getInstance().TextOutStatic("目前处于暂停监听状态");
+		m_Stat = HelperStat::STAT_LISSUSPEND;
+	}
+	else if (m_Stat == HelperStat::STAT_LISSUSPEND) {
+		hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyBoardProc, theApp.m_hInstance, 0);
+		if (hHook == NULL)
+		{
+			MessageBoxW(TEXT("重新开始监听失败!"), TEXT("ERROE"), MB_OK | MB_ICONERROR);
+//			m_Stat = HelperStat::STAT_SPACE;
+			return;
+		}
+
+		CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
+		m_Stat = HelperStat::STAT_LISTENING;
+	}
+}
+
+
+void CWorkHelperDlg::OnCtlKeySuspend()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (m_Stat == HelperStat::STAT_CONTROLING) {
+		SuspendThread(m_pthread2->m_hThread); //挂起线程。“暂停”
+		SuspendThread(m_pthread1->m_hThread); //挂起线程。“暂停”
+
+		CListenKey::getInstance().TextOutStatic("目前处于暂停控键状态");
+		m_Stat = HelperStat::STAT_CTLSUSPEND;
+	}
+	else if (m_Stat == HelperStat::STAT_CTLSUSPEND) {
+		ResumeThread(m_pthread2->m_hThread); //释放线程。”播放“
+		ResumeThread(m_pthread1->m_hThread); //挂起线程。“暂停”
+
+		CListenKey::getInstance().TextOutStatic("正在控键目标窗口中...");
+		m_Stat = HelperStat::STAT_CONTROLING;
+	}
+
+}
+
+
+void CWorkHelperDlg::OnHelp()
+{
+	// TODO: 在此添加命令处理程序代码
+	WinExec("notepad.exe ./README.md", SW_NORMAL);
 }

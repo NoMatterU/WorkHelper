@@ -71,4 +71,7 @@ public:
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnScanFile();
 	afx_msg void OnPointToHwnd();
+	afx_msg void OnLisKeySuspend();
+	afx_msg void OnCtlKeySuspend();
+	afx_msg void OnHelp();
 };

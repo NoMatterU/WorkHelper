@@ -1,8 +1,9 @@
 #pragma once
 #include "stdafx.h"
+#include "resource.h"
 
 //窗口大小
-#define DEFAULTHEIGHT 260
+#define DEFAULTHEIGHT 240
 #define DEFAULTWIDTH 400
 //文件 窗口字串最大长度
 #define MAXFILENAME 30 + 1
