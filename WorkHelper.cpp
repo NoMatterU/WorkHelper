@@ -48,10 +48,41 @@ BOOL CWorkHelperApp::InitInstance()
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
+
+	m_hMutex = CreateMutex(NULL, TRUE, _T("YDDMutex"));
+	if (NULL == m_hMutex) return FALSE;
+
+
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		HWND hProgramWnd = ::FindWindowW(NULL, _T("YDDMutex"));
+///		HWND hWnd = ::FindWindowA(NULL, ("WorkHelper"));
+///		hWnd = ::GetNextWindow(hWnd, GW_HWNDNEXT);
+///		hWnd = ::GetNextWindow(hWnd, GW_HWNDNEXT);
+		if (hProgramWnd)
+		{
+			WINDOWPLACEMENT* pWndpl = NULL;
+			WINDOWPLACEMENT wpm;
+			pWndpl = &wpm;
+			GetWindowPlacement(hProgramWnd, &wpm);
+			if (pWndpl)
+			{
+				//将运行的程序窗口还原成正常状态
+				pWndpl->showCmd = SW_NORMAL;
+				::SetWindowPlacement(hProgramWnd, pWndpl);
+				///::SetForegroundWindow(hProgramWnd);
+				///SetWindowPos(CWorkHelperDlg::hMain, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+			}
+		}
+		CloseHandle(m_hMutex);
+		m_hMutex = NULL;
+		return FALSE;
+	}
+
 	CWinApp::InitInstance();
 
 
-	AfxEnableControlContainer();
+//	AfxEnableControlContainer();
 
 	// Create the shell manager, in case the dialog contains
 	// any shell tree view or shell list view controls.
@@ -101,5 +132,12 @@ BOOL CWorkHelperApp::InitInstance()
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;
+}
+
+int CWorkHelperApp::ExitInstance()
+{
+	if (NULL != m_hMutex) CloseHandle(m_hMutex);
+	m_hMutex = NULL;
+	return CWinApp::ExitInstance();
 }
 

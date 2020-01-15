@@ -7,7 +7,7 @@
 
 #include <SDKDDKVer.h>
 
-#define MAX_BUF_SIZE 200
+#define MAX_BUF_SIZE 2000
 #define MAX_TEXT_SIZE 30
 #define WM_ENDHOOK WM_USER + 1
 #define WM_CTLEND WM_USER + 2

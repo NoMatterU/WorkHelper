@@ -57,6 +57,7 @@ BEGIN_MESSAGE_MAP(CWorkHelperDlg, CDialogEx)
 	ON_COMMAND(ID_SCAN, &CWorkHelperDlg::OnScanFile)
 	ON_COMMAND(ID_POINT, &CWorkHelperDlg::OnPointToHwnd)
 	ON_COMMAND(ID_HELP, &CWorkHelperDlg::OnHelp)
+	ON_WM_NCPAINT()
 END_MESSAGE_MAP()
 
 
@@ -131,6 +132,7 @@ HCURSOR CWorkHelperDlg::OnQueryDragIcon()
 }
 
 void CWorkHelperDlg::EndDialog(int nResult) {
+	::UnhookWindowsHookEx(hHook);
 	::ReleaseDC(hStatic, hDC);
 }
 
@@ -395,7 +397,7 @@ void CWorkHelperDlg::OnLisKeyStart()
 	m_Stat = HelperStat::STAT_LISTENING;
 
 	this->SetFocus();
-	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...", " ", " ");
+	CListenKey::getInstance().TextOutStatic("正在监听键盘消息...");
 }
 
 
@@ -413,10 +415,12 @@ void CWorkHelperDlg::OnLisKeyFinish()
 
 		CListenKey::getInstance().ExitHook();
 
-		CListenKey::getInstance().TextOutStatic("当前已结束监听状态", " ", " ");
+		CListenKey::getInstance().CleanTextOut();
+		CListenKey::getInstance().TextOutStatic("当前已结束监听状态");
 		this->SetFocus();
 		return;
 	}
+
 #ifdef _DEBUG
 		MessageBox(L"CNMB", L"SB", MB_OK);
 #endif
@@ -477,7 +481,6 @@ void CWorkHelperDlg::OnCtlKeyStart()
 		MessageBox(L"控键错误，资源不足!", L"SB", MB_OK);
 		return;
 	}
-	m_Stat = HelperStat::STAT_CONTROLING;
 //	MessageBox(msgfile, L"OnControlKey", MB_OK);
 
 	CControlKey *pck = CControlKey::getInstance();
@@ -486,8 +489,9 @@ void CWorkHelperDlg::OnCtlKeyStart()
 		MessageBox(L"CNMB", L"SB", MB_OK);
 		return;
 	}
+	m_Stat = HelperStat::STAT_CONTROLING;
 
-	CListenKey::getInstance().TextOutStatic("控键正在目标窗口中...", "", "");
+	CListenKey::getInstance().TextOutStatic("控键正在目标窗口中...");
 	::SetForegroundWindow(hTarget);
 	//多次控键怎么办
 	//	if(m_pthread1 == NULL)
@@ -598,6 +602,7 @@ void CWorkHelperDlg::OnLisKeySuspend()
 		}
 
 		CListenKey::getInstance().ExitHook();
+		CListenKey::getInstance().CleanTextOut();
 		CListenKey::getInstance().TextOutStatic("目前处于暂停监听状态");
 		m_Stat = HelperStat::STAT_LISSUSPEND;
 	}
@@ -641,4 +646,31 @@ void CWorkHelperDlg::OnHelp()
 {
 	// TODO: 在此添加命令处理程序代码
 	WinExec("notepad.exe ./README.md", SW_NORMAL);
+}
+
+
+void CWorkHelperDlg::OnNcPaint()
+{
+	// TODO: 在此处添加消息处理程序代码
+	// 不为绘图消息调用 CDialogEx::OnNcPaint()
+	CDialogEx::OnNcPaint();
+/**/	
+	CDC *pDC = GetDC();
+	CRect rectWnd;
+	CDC MemDC;
+
+	GetWindowRect(&rectWnd);
+
+//	int nWidth = rectWnd.Width();
+//	int nHeight = GetSystemMetrics(SM_CYSIZE) + GetSystemMetrics(SM_CYMENU) + 3;
+
+	MemDC.CreateCompatibleDC(pDC);
+
+	//绘制底色
+//	MemDC.FillSolidRect(0, 0, nWidth, nHeight, RGB(200, 0, 0));
+
+	//绘制标题
+	DrawCaption(&MemDC, rectWnd, DC_TEXT | DC_GRADIENT | DC_ICON);
+
+	ReleaseDC(&MemDC);
 }

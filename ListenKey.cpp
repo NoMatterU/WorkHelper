@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ListenKey.h"
-#include "WorkHelperDlg.h"
 
 DWORD CListenKey::GetIntervalTime(DWORD nowTime)
 {
@@ -13,21 +12,31 @@ void CListenKey::UpdateTime(DWORD curTime) {
 
 //add ÎÄ×Ö¾ÓÖÐÏÔÊ¾
 void CListenKey::TextOutStatic(const char *text1, const char *text2, const char *text3) {
-	char line1[31]{ 0 }, line2[31]{ 0 }, line3[31]{ 0 };
-	//	memset(line1, 0x20, 30);
-	//	memset(line2, 0x20, 30);
-	//	memset(line3, 0x20, 30);
+	char line1[60]{ 0 }, line2[60]{ 0 }, line3[60]{ 0 };
+	memset(line1, 0x20, 59);
+	memset(line2, 0x20, 59);
+	memset(line3, 0x20, 59);
+
 	if (text1 != NULL) {
-		strcpy_s(line1, text1);
-		TextOutA(CWorkHelperDlg::hDC, 60, 25, line1, 30);
+		int offset = (60 - strlen(text1)) / 2;
+		if(offset >= 0 && offset < 29)
+			memcpy(line1 + offset, text1, strlen(text1));
+
+		TextOutA(CWorkHelperDlg::hDC, 60, 10, line1, 60);
 	}
 	if (text2 != NULL) {
-		strcpy_s(line2, text2);
-		TextOutA(CWorkHelperDlg::hDC, 60, 55, line2, 30);
+		int offset = (60 - strlen(text2)) / 2;
+		if (offset >= 0 && offset < 29)
+			memcpy(line2 + offset, text2, strlen(text2));
+
+		TextOutA(CWorkHelperDlg::hDC, 60, 40, line2, 60);
 	}
 	if (text3 != NULL) {
-		strcpy_s(line3, text3);
-		TextOutA(CWorkHelperDlg::hDC, 60, 85, line3, 30);
+		int offset = (60 - strlen(text3)) / 2;
+		if (offset >= 0 && offset < 29)
+			memcpy(line3 + offset, text3, strlen(text3));
+
+		TextOutA(CWorkHelperDlg::hDC, 60, 70, line3, 60);
 	}
 }
 

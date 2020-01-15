@@ -74,4 +74,6 @@ public:
 	afx_msg void OnLisKeySuspend();
 	afx_msg void OnCtlKeySuspend();
 	afx_msg void OnHelp();
+	afx_msg void OnNcPaint();
+
 };
