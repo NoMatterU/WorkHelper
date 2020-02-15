@@ -187,6 +187,7 @@
   <ItemGroup>
     <ClInclude Include="ControlKey.h" />
     <ClInclude Include="ListenKey.h" />
+    <ClInclude Include="ModelDialog.h" />
     <ClInclude Include="OpnFileDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -197,6 +198,7 @@
   <ItemGroup>
     <ClCompile Include="ControlKey.cpp" />
     <ClCompile Include="ListenKey.cpp" />
+    <ClCompile Include="ModelDialog.cpp" />
     <ClCompile Include="OpnFileDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

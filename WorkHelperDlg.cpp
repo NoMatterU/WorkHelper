@@ -9,7 +9,7 @@
 #include "ListenKey.h"
 #include "OpnFileDlg.h"
 #include "ControlKey.h"
-
+#include "ModelDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -168,14 +168,17 @@ LRESULT CALLBACK CWorkHelperDlg::KeyBoardProc(int nCode, WPARAM wParam, LPARAM l
 			//返回真假来过滤键消息
 			if (listen.KeyStatInfo(keyNum->vkCode, text, false)) {
 				sprintf_s(interval, "消息间隔时间 : %d ms", listen.GetIntervalTime(keyNum->time));
-				listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, Code, lParam);
+				listen.PushMsgBuf(keyNum->time, WM_KEYDOWN, keyNum->vkCode, lParam);
 				//额外的WM_CHAR消息
-				if ((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z') ||
-						(keyNum->vkCode >= '0' && keyNum->vkCode <= '9') ||
-							keyNum->vkCode == VK_SPACE
-					) {
-					if((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z')) 
-						if (!IsHCase()) Code = tolower(keyNum->vkCode);
+				if ((keyNum->vkCode >= 'A' && keyNum->vkCode <= 'Z')) {
+					if (!IsHCase()) Code = tolower(keyNum->vkCode);
+					listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, Code, lParam);
+				}
+				else if ((keyNum->vkCode >= '0' && keyNum->vkCode <= '9') || keyNum->vkCode == VK_SPACE) {
+					listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, keyNum->vkCode, lParam);
+				}
+				else if ((keyNum->vkCode >= VK_NUMPAD0 && keyNum->vkCode <= VK_NUMPAD9)) {
+					Code = 48 + keyNum->vkCode - 96;
 					listen.PushMsgBuf(keyNum->time + 20, WM_CHAR, Code, lParam);
 				}
 			}
@@ -372,9 +375,13 @@ void CWorkHelperDlg::OnLisKeyStart()
 
 	OpnFileDlg dlg(this->GetSafeHwnd());
 
-//	INT_PTR nResponse = dlg.DoModal();
-
 	if (IDOK == dlg.DoModal()) {
+		CString str(".\\");
+		str += dlg.GetFileName();
+		if (!CListenKey::getInstance().LoadFile(str + ".msg")) {
+			MessageBox(L"打开文件失败!", L"ERROR", MB_OK | MB_ICONERROR);
+			return;
+		}
 
 		hHook = SetWindowsHookEx(
 			WH_KEYBOARD_LL,    // 监听类型【键盘】
@@ -382,6 +389,7 @@ void CWorkHelperDlg::OnLisKeyStart()
 			theApp.m_hInstance,      // 当前实例句柄
 			0               // 监听窗口句柄(NULL为全局监听)
 		);
+
 	}
 	else return;
 
@@ -485,8 +493,8 @@ void CWorkHelperDlg::OnCtlKeyStart()
 
 	CControlKey *pck = CControlKey::getInstance();
 
-	if (!pck->InitFile(L"./Journal.txt")) {
-		MessageBox(L"CNMB", L"SB", MB_OK);
+	if (!pck->InitFile(msgfile)) {
+		MessageBox(L"打开文件失败!", L"ERROR", MB_OK | MB_ICONERROR);
 		return;
 	}
 	m_Stat = HelperStat::STAT_CONTROLING;
@@ -519,6 +527,8 @@ void CWorkHelperDlg::OnCtlKeyFinish()
 		return;
 	}
 
+	ModelDialog mDlg(m_hWnd);
+	mDlg.DoModal();
 #ifdef _DEBUG
 		MessageBox(L"CNMB", L"SB", MB_OK);
 #endif

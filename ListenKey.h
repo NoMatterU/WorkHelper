@@ -9,6 +9,19 @@ public:
 		return l;
 	}
 
+	bool LoadFile(const WCHAR *filepath) {
+		//每次文件打开清空文件内容
+		if (m_isOpen) {
+			m_saveFile.Close();
+			m_isOpen = false;
+		}
+		if (filepath == L"" || filepath == NULL || lstrlenW(filepath) > 256) return false;
+		m_isOpen = m_saveFile.Open(filepath, CFile::modeWrite | CFile::typeBinary | CFile::modeCreate);
+		if (!m_isOpen) return false;
+//		m_saveFile.Flush();
+		return true;
+	}
+
 	DWORD GetIntervalTime(DWORD nowTime);
 
 	//add 文字居中显示 Dis
@@ -36,19 +49,18 @@ public:
 	}
 private:
 	CListenKey() {
-		//每次文件打开清空文件内容
-		m_saveFile.open("Journal.txt", ios_base::in | ios_base::out);
 		m_hStatic = FindWindowEx(CWorkHelperDlg::hMain, NULL, L"STATIC", NULL);
 	};
 
 	~CListenKey() {
-		m_saveFile.close();
+		if(m_isOpen) m_saveFile.Close();
 	}
 
 	HWND m_hStatic;
 	bool m_iFirst{ true };
+	BOOL m_isOpen = false;
 	MyMSG m_msgBuf[MAX_BUF_SIZE]{ 0 };
 	int m_msgIndex{ 0 };
 	DWORD m_startTime{ 0 }, m_lastTime{ 0 };
-	ofstream m_saveFile;
+	CFile m_saveFile;
 };

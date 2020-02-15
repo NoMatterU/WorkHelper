@@ -6,17 +6,14 @@
 #define	ID_CANCELBTN	1002
 #define	ID_STATIC	1003
 
-HWND OpnFileDlg::m_hWnd = NULL;
-//HINSTANCE KDialog::m_hInst = NULL;
-HWND OpnFileDlg::m_hParent = NULL;
-WCHAR OpnFileDlg::m_FileName[]{ 0 };
-bool iLoseForce = false;
+
+WCHAR FileName[MAXFILENAME]{ 0 };
+
 INT_PTR retModel = NULL;
-/* 声明回调函数 */
-//LRESULT CALLBACK KDialog::WndProc(HWND, UINT, WPARAM, LPARAM);
 
 
-/* 回调函数 */
+/*
+// 回调函数 
 LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam)
 {
 	HDC	hdc = NULL;
@@ -29,7 +26,7 @@ LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM
 	switch (umsg)
 	{
 	case WM_CREATE:            //处理窗口创建成功后发来的消息
-							   /* 创建窗口控件 */
+							   // 创建窗口控件 
 
 //		cxChar = LOWORD(GetDialogBaseUnits());    //获得窗口中内定字体字元宽度（低字组）
 //		cyChar = HIWORD(GetDialogBaseUnits());    //或得窗口中内定字体字元高度（高字组）
@@ -75,7 +72,7 @@ LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM
 	case WM_NCACTIVATE:
 		if (wParam == 0) iLoseForce = true;
 		break;
-
+*/
 /*	case WM_CTLCOLORBTN://设置按钮的颜色
 
 		if ((HWND)lParam == GetDlgItem(m_hWnd, ID_OKBTN))
@@ -94,68 +91,18 @@ LRESULT CALLBACK OpnFileDlg::WndProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM
 			return (INT_PTR)CreateSolidBrush(RGB(240, 240, 240));//返回画刷设置按钮的背景色
 		}
 		break;
-*/	}
+	}
 	return DefWindowProc(hwnd, umsg, wParam, lParam);
 }
 
 
-/* 创建控件 */
-bool OpnFileDlg::CreateWindows()
-{
-	RECT rect{ 0 };
-	GetWindowRect(m_hParent, &rect);
-
-	int ParHeight = rect.bottom - rect.top;
-	int ParWidth = rect.right - rect.left;
-	/* 创建主窗口 */
-	m_hWnd = CreateWindow(m_szAppName, TEXT("保存消息文件"),
-		WS_EX_LAYERED | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-		rect.left + (ParWidth - DEFAULTWIDTH) / 2, rect.top + (ParHeight - DEFAULTHEIGHT) / 2,
-		m_cWidth, m_cHenght,
-		m_hParent, NULL, NULL, NULL);
-	if (!m_hWnd) return false;
-
-	/* 创建文本框 */
-	m_hChild[0] = CreateWindow(TEXT("EDIT"), NULL,
-		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
-		DEFAULTWIDTH / 2 - 200 / 3, DEFAULTHEIGHT / 4 - 30 / 2, 200, 30,
-		m_hWnd, (HMENU)ID_EDIT, NULL, NULL);
-
-	/* 创建确定按钮 | BS_OWNERDRAW */
-	m_hChild[1] = CreateWindow(TEXT("BUTTON"), TEXT("确定"),
-		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
-		DEFAULTWIDTH / 4 - 60 / 2, (DEFAULTHEIGHT * 2) / 3 - 30 / 2, 60, 30,
-		m_hWnd, (HMENU)ID_OKBTN, NULL, NULL);
-
-	/* 创建取消按钮 */
-	m_hChild[2] = CreateWindow(TEXT("BUTTON"), TEXT("取消"),
-		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_CENTER,
-		(DEFAULTWIDTH * 3) / 4 - 60 / 2, (DEFAULTHEIGHT * 2) / 3 - 30 / 2, 60, 30,
-		m_hWnd, (HMENU)ID_CANCELBTN, NULL, NULL);
-
-	//创建静态文本
-	m_hChild[3] = CreateWindow(TEXT("STATIC"), TEXT("文件名："),
-		WS_CHILD | WS_VISIBLE | SS_CENTER,
-		DEFAULTWIDTH / 4 - 80 / 2, DEFAULTHEIGHT / 4 - 30 / 2, 80, 30,
-		m_hWnd, (HMENU)ID_STATIC, NULL, NULL);
-
-	if (!(m_hChild[0] && m_hChild[1] && m_hChild[2] && m_hChild[3])) {
-		DestroyWindow(m_hWnd);
-		return false;
-	}
-
-	/* 显示与更新窗口 */
-	ShowWindow(m_hWnd, SW_SHOW);
-	UpdateWindow(m_hWnd);
-	return true;
-}
 
 INT_PTR OpnFileDlg::DoModal() {
 	MSG msg;
 
 	if(!CreateWindows()) return -1;
 
-	/* 从消息队列中获取消息 */
+	// 从消息队列中获取消息 
 	while (GetMessageW(&msg, NULL, 0, 0))
 	{
 		if (iLoseForce) {
@@ -183,4 +130,73 @@ INT_PTR OpnFileDlg::DoModal() {
 	Sleep(90);
 	SetForegroundWindow(m_hParent);
 	return retModel;
+}
+*/
+
+void onCommand(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam) {
+	if (ID_OKBTN == LOWORD(wParam)) {
+
+		if (HIWORD(wParam) == BN_CLICKED) {
+			HWND hEdit = GetDlgItem(hwnd, ID_EDIT);
+			if (MAXFILENAME > GetWindowTextLength(hEdit)) {
+				GetWindowText(hEdit, FileName, MAXFILENAME - 1);
+				DestroyWindow(hwnd);
+				retModel = IDOK;
+			}
+		}
+	}
+	else if (ID_CANCELBTN == LOWORD(wParam)) {
+		if (HIWORD(wParam) == BN_CLICKED) {
+			DestroyWindow(hwnd);
+			retModel = IDCANCEL;
+		}
+	}
+}
+
+//MSG_COMMAND(NULL)
+MSG_COMMAND(onCommand)
+
+
+bool OpnFileDlg::CreateWindows(LPWSTR pWndName, int cx, int cy, int height, int width)
+{
+	ModelDialog::CreateWindows(pWndName, cx, cy, height, width);
+	// 创建文本框 
+	m_hChild[0] = CreateWindow(TEXT("EDIT"), NULL,
+		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
+		DEFAULTWIDTH / 2 - 200 / 3, DEFAULTHEIGHT / 4 - 30 / 2, 200, 30,
+		this->getSafehWnd(), (HMENU)ID_EDIT, NULL, NULL);
+
+	// 创建确定按钮 | BS_OWNERDRAW 
+	m_hChild[1] = CreateWindow(TEXT("BUTTON"), TEXT("确定"),
+		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
+		DEFAULTWIDTH / 4 - 60 / 2, (DEFAULTHEIGHT * 2) / 3 - 40 / 2, 60, 30,
+		this->getSafehWnd(), (HMENU)ID_OKBTN, NULL, NULL);
+
+	// 创建取消按钮 
+	m_hChild[2] = CreateWindow(TEXT("BUTTON"), TEXT("取消"),
+		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_CENTER,
+		(DEFAULTWIDTH * 3) / 4 - 60 / 2, (DEFAULTHEIGHT * 2) / 3 - 40 / 2, 60, 30,
+		this->getSafehWnd(), (HMENU)ID_CANCELBTN, NULL, NULL);
+
+	//创建静态文本
+	m_hChild[3] = CreateWindow(TEXT("STATIC"), TEXT("文件名："),
+		WS_CHILD | WS_VISIBLE | SS_CENTER,
+		DEFAULTWIDTH / 4 - 100 / 2, DEFAULTHEIGHT / 4 - 20 / 2, 80, 30,
+		this->getSafehWnd(), (HMENU)ID_STATIC, NULL, NULL);
+
+	if (!(m_hChild[0] && m_hChild[1] && m_hChild[2] && m_hChild[3])) {
+		DestroyWindow(this->getSafehWnd());
+		return false;
+	}
+	return true;
+}
+
+INT_PTR OpnFileDlg::DoModal()
+{
+	ModelDialog::DoModal();
+	return retModel;
+}
+
+const PWCH OpnFileDlg::GetFileName() {
+	return FileName;
 }

@@ -68,14 +68,13 @@ bool CListenKey::IsBufFull() {
 }
 
 bool CListenKey::SaveMsg2File() {
-	if (m_saveFile.is_open())
+	if (m_isOpen)
 		if (m_msgIndex == 0) return true;
 		else if (m_msgIndex <= MAX_BUF_SIZE && m_msgIndex > 0) {
-			if (m_saveFile.write((char *)m_msgBuf, sizeof(MyMSG)*m_msgIndex)) {
-//				memset(m_msgBuf, 0, sizeof(MyMSG) * MAX_BUF_SIZE);
-				m_msgIndex = 0;
-				return true;
-			}
+			m_saveFile.Write(m_msgBuf, sizeof(MyMSG)*m_msgIndex);
+//			memset(m_msgBuf, 0, sizeof(MyMSG) * MAX_BUF_SIZE);
+			m_msgIndex = 0;
+			return true;
 		}
 	return false;
 }
