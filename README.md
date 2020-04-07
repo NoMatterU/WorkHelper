@@ -1,12 +1,12 @@
 ﻿# WorkHelper
-记录键盘消息，保存文件且可以对指定窗口发送记录的消息
+###记录键盘消息，保存文件且可以对指定窗口发送记录的消息
 
-/*********************************************
+----
 在玩游戏时经常因为一些重复性的任务，搞的焦头烂额；不停的刷刷刷十分无聊
 有了这款神器👉从此不必为刷怪而烦恼，疯狂点点点抢金币手速不够而自卑
 只要轻松记录键盘消息，在选定窗口就可以对发送按键消息，节省你刷刷刷的时间，
 享受真正的游戏时间。
-********************************************/
+
 
 
 ================================================================================
@@ -20,20 +20,20 @@ Foundation Classes but is also a starting point for writing your application.
 This file contains a summary of what you will find in each of the files that
 make up your WorkHelper application.
 
-WorkHelper.vcxproj
+>WorkHelper.vcxproj
     This is the main project file for VC++ projects generated using an application wizard.
     It contains information about the version of Visual C++ that generated the file, and
     information about the platforms, configurations, and project features selected with the
     application wizard.
 
-WorkHelper.vcxproj.filters
+>WorkHelper.vcxproj.filters
     This is the filters file for VC++ projects generated using an Application Wizard. 
     It contains information about the assciation between the files in your project 
     and the filters. This association is used in the IDE to show grouping of files with
     similar extensions under a specific node (for e.g. ".cpp" files are associated with the
     "Source Files" filter).
 
-WorkHelper.h
+>WorkHelper.h
     This is the main header file for the application.  It includes other
     project specific headers (including Resource.h) and declares the
     CWorkHelperApp application class.
@@ -58,7 +58,7 @@ res\WorkHelper.rc2
     the resource editor in this file.
 
 
-/////////////////////////////////////////////////////////////////////////////
+`
 
 The application wizard creates one dialog class:
 
@@ -67,7 +67,7 @@ WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
     the behavior of your application's main dialog.  The dialog's template is
     in WorkHelper.rc, which can be edited in Microsoft Visual C++.
 
-/////////////////////////////////////////////////////////////////////////////
+`
 
 Help Support:
 
