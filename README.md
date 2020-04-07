@@ -13,9 +13,9 @@
     MICROSOFT FOUNDATION CLASS LIBRARY : WorkHelper Project Overview
 ===============================================================================
 
-The application wizard has created this WorkHelper application for
+___The application wizard has created this WorkHelper application for
 you.  This application not only demonstrates the basics of using the Microsoft
-Foundation Classes but is also a starting point for writing your application.
+Foundation Classes but is also a starting point for writing your application.___
 
 This file contains a summary of what you will find in each of the files that
 make up your WorkHelper application.
@@ -59,15 +59,15 @@ make up your WorkHelper application.
 
 
 
-`The application wizard creates one dialog class:
+The application wizard creates one dialog class:
 
 WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
     These files contain your CWorkHelperDlg class.  This class defines
     the behavior of your application's main dialog.  The dialog's template is
-    in WorkHelper.rc, which can be edited in Microsoft Visual C++.`
+    in WorkHelper.rc, which can be edited in Microsoft Visual C++.
 
 
-Help Support:
+### Help Support:
 
 * hlp\WorkHelper.hhp
     This file is a help project file. It contains the data needed to
@@ -96,17 +96,17 @@ Help Support:
 
 ----
 
-Other Features:
+### Other Features:
 
-`ActiveX Controls
+ActiveX Controls
     The application includes support to use ActiveX controls.
 
 Printing and Print Preview support
     The application wizard has generated code to handle the print, print setup, and print preview
-    commands by calling member functions in the CView class from the MFC library.`
+    commands by calling member functions in the CView class from the MFC library.
 
 
-Other standard files:
+### Other standard files:
 
 
 * StdAfx.h, StdAfx.cpp
@@ -126,9 +126,9 @@ Other standard files:
 	executable or it may be included in the executable in the form of a resource.
 
 
-Other notes:
-
-`The application wizard uses "TODO:" to indicate parts of the source code you
+### Other notes:
+```
+The application wizard uses "TODO:" to indicate parts of the source code you
 should add to or customize.
 
 If your application uses MFC in a shared DLL, you will need
@@ -136,5 +136,5 @@ to redistribute the MFC DLLs. If your application is in a language
 other than the operating system's locale, you will also have to
 redistribute the corresponding localized resources MFC100XXX.DLL.
 For more information on both of these topics, please see the section on
-redistributing Visual C++ applications in MSDN documentation.`
-
+redistributing Visual C++ applications in MSDN documentation.
+```
