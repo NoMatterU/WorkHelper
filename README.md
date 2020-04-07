@@ -1,5 +1,5 @@
 ﻿# WorkHelper
-###记录键盘消息，保存文件且可以对指定窗口发送记录的消息
+### 记录键盘消息，保存文件且可以对指定窗口发送记录的消息
 
 ----
 在玩游戏时经常因为一些重复性的任务，搞的焦头烂额；不停的刷刷刷十分无聊
@@ -59,14 +59,12 @@ res\WorkHelper.rc2
 
 
 `
-
 The application wizard creates one dialog class:
 
 WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
     These files contain your CWorkHelperDlg class.  This class defines
     the behavior of your application's main dialog.  The dialog's template is
     in WorkHelper.rc, which can be edited in Microsoft Visual C++.
-
 `
 
 Help Support:
@@ -96,10 +94,10 @@ hlp\Images\*.gif
     Microsoft Foundation Class Library standard commands.
 
 
-/////////////////////////////////////////////////////////////////////////////
+----
 
 Other Features:
-
+`
 ActiveX Controls
     The application includes support to use ActiveX controls.
 
@@ -107,10 +105,10 @@ Printing and Print Preview support
     The application wizard has generated code to handle the print, print setup, and print preview
     commands by calling member functions in the CView class from the MFC library.
 
-/////////////////////////////////////////////////////////////////////////////
+`
 
 Other standard files:
-
+`
 StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
     named WorkHelper.pch and a precompiled types file named StdAfx.obj.
@@ -126,10 +124,10 @@ WorkHelper.manifest
 	from the application. The Application manifest  maybe included for redistribution
 	as an external .manifest file that is installed in the same folder as the application
 	executable or it may be included in the executable in the form of a resource.
-/////////////////////////////////////////////////////////////////////////////
+`
 
 Other notes:
-
+`
 The application wizard uses "TODO:" to indicate parts of the source code you
 should add to or customize.
 
@@ -139,5 +137,4 @@ other than the operating system's locale, you will also have to
 redistribute the corresponding localized resources MFC100XXX.DLL.
 For more information on both of these topics, please see the section on
 redistributing Visual C++ applications in MSDN documentation.
-
-/////////////////////////////////////////////////////////////////////////////
+`
