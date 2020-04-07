@@ -38,34 +38,34 @@ make up your WorkHelper application.
     project specific headers (including Resource.h) and declares the
     CWorkHelperApp application class.
 
-WorkHelper.cpp
+>WorkHelper.cpp
     This is the main application source file that contains the application
     class CWorkHelperApp.
 
-WorkHelper.rc
+>WorkHelper.rc
     This is a listing of all of the Microsoft Windows resources that the
     program uses.  It includes the icons, bitmaps, and cursors that are stored
     in the RES subdirectory.  This file can be directly edited in Microsoft
     Visual C++. Your project resources are in 1033.
 
-res\WorkHelper.ico
+>res\WorkHelper.ico
     This is an icon file, which is used as the application's icon.  This
     icon is included by the main resource file WorkHelper.rc.
 
-res\WorkHelper.rc2
+>res\WorkHelper.rc2
     This file contains resources that are not edited by Microsoft
     Visual C++. You should place all resources not editable by
     the resource editor in this file.
 
 
-`
+``
 The application wizard creates one dialog class:
 
 WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
     These files contain your CWorkHelperDlg class.  This class defines
     the behavior of your application's main dialog.  The dialog's template is
     in WorkHelper.rc, which can be edited in Microsoft Visual C++.
-`
+``
 
 Help Support:
 
@@ -97,7 +97,8 @@ hlp\Images\*.gif
 ----
 
 Other Features:
-`
+
+``
 ActiveX Controls
     The application includes support to use ActiveX controls.
 
@@ -105,10 +106,11 @@ Printing and Print Preview support
     The application wizard has generated code to handle the print, print setup, and print preview
     commands by calling member functions in the CView class from the MFC library.
 
-`
+``
 
 Other standard files:
-`
+
+``
 StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
     named WorkHelper.pch and a precompiled types file named StdAfx.obj.
@@ -124,7 +126,7 @@ WorkHelper.manifest
 	from the application. The Application manifest  maybe included for redistribution
 	as an external .manifest file that is installed in the same folder as the application
 	executable or it may be included in the executable in the form of a resource.
-`
+``
 
 Other notes:
 `
