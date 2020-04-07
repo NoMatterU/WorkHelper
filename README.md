@@ -17,8 +17,8 @@ ___The application wizard has created this WorkHelper application for
 you.  This application not only demonstrates the basics of using the Microsoft
 Foundation Classes but is also a starting point for writing your application.___
 
-This file contains a summary of what you will find in each of the files that
-make up your WorkHelper application.
+___This file contains a summary of what you will find in each of the files that
+make up your WorkHelper application.___
 
 * WorkHelper.vcxproj
     This is the main project file for VC++ projects generated using an application wizard.
@@ -59,12 +59,12 @@ make up your WorkHelper application.
 
 
 
-The application wizard creates one dialog class:
+___The application wizard creates one dialog class:___
 
-WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
+___WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
     These files contain your CWorkHelperDlg class.  This class defines
     the behavior of your application's main dialog.  The dialog's template is
-    in WorkHelper.rc, which can be edited in Microsoft Visual C++.
+    in WorkHelper.rc, which can be edited in Microsoft Visual C++.___
 
 
 ### Help Support:
@@ -94,17 +94,15 @@ WorkHelperDlg.h, WorkHelperDlg.cpp - the dialog
     Microsoft Foundation Class Library standard commands.
 
 
-----
-
 ### Other Features:
-
+```
 ActiveX Controls
     The application includes support to use ActiveX controls.
 
 Printing and Print Preview support
     The application wizard has generated code to handle the print, print setup, and print preview
     commands by calling member functions in the CView class from the MFC library.
-
+```
 
 ### Other standard files:
 
