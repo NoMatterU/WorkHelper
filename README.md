@@ -106,23 +106,23 @@ Printing and Print Preview support
 
 ### Other standard files:
 
-
-* StdAfx.h, StdAfx.cpp
+```
+StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
     named WorkHelper.pch and a precompiled types file named StdAfx.obj.
 
-* Resource.h
+Resource.h
     This is the standard header file, which defines new resource IDs.
     Microsoft Visual C++ reads and updates this file.
 
-* WorkHelper.manifest
+WorkHelper.manifest
 	Application manifest files are used by Windows XP to describe an applications
 	dependency on specific versions of Side-by-Side assemblies. The loader uses this
 	information to load the appropriate assembly from the assembly cache or private
 	from the application. The Application manifest  maybe included for redistribution
 	as an external .manifest file that is installed in the same folder as the application
 	executable or it may be included in the executable in the form of a resource.
-
+```
 
 ### Other notes:
 ```
